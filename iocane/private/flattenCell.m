@@ -1,15 +1,11 @@
-function [div] = divL2Poisson(spikeTrains1, spikeTrains2, params)
-% Divergence between the estimated count distributions
-% div = divL2Poisson(spikeTrains1, spikeTrains2, params)
-% 
-% Input:
-%   spikeTrains1, spikeTrains2: (struct) 2 sets of spike trains for comparison
-%   params: (struct) see divL2PoissonParams
-% Output:
-%   div: (1) divergence value
+function [a] = flattenCell(c)
+% Flatten one or two dimensional cell of arrays of same type to a big array
+% It is useful when creating all spikes form spike train data structure
 %
-% REQUIRES: stat toolbox (ksdensity)
-% See also: divL2PoissonParams
+% Input:
+%   c: cell
+% Output:
+%   a: array
 %
 % $Id$
 % Copyright 2009 iocane project. All rights reserved.
@@ -37,20 +33,15 @@ function [div] = divL2Poisson(spikeTrains1, spikeTrains2, params)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-% params.dt : time step size
-tr = 0:params.dt:max(spikeTrains1.duration, spikeTrains2.duration);
-
-% estimate the rate function
-lambda1 = estimateMarginalIntensity(spikeTrains1);
-lambda2 = estimateMarginalIntensity(spikeTrains2);
-
-div = sum((lambda1 - lambda2).^2) * params.dt;
-
-    function lambda = estimateMarginalIntensity(spikeTrains)
-	allSpikes = flattenCell(spikeTrains.data);
-	sigma = params.kernelSizeHandle(allSpikes(:));
-	lambda = ksdensity(allSpikes(:), tr, 'width', sigma);
-	lambda = lambda * numel(allSpikes) / spikeTrains.N / spikeTrains.duration;
+N = sum(cellfun('length', c));
+a = zeros(N, 1);
+k = 1;
+for ck = 1:size(c, 1)
+    for ckk = 1:size(c, 2)
+	temp = c{ck, ckk};
+	l = length(temp);
+	a(k:k+l-1) = temp;
+	k = k+l;
     end
 end
 % vim:ts=8:sts=4:sw=4

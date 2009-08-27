@@ -37,7 +37,7 @@ function div = sdivKS(data1, data2, params)
 % POSSIBILITY OF SUCH DAMAGE.
 
 % estimate empirical ISI distributions
-edges = [-inf; sort([data1;data2]); inf];
+edges = [-inf; sort([data1(:);data2(:)]); inf];
 cdf1 = cumsum(histc(data1, edges) / length(data1));
 cdf2 = cumsum(histc(data2, edges) / length(data2));
 
