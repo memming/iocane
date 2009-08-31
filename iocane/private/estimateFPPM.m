@@ -1,15 +1,15 @@
-function [fppm] = estimateFPPM(spikeTrains, kernelSizeHandle)
+function [fppm] = estimateFPPM(spikeTrains, kernelSizeHandle, sigma1)
 % Estimate FPPM via nonparametric estimator using Parzen window
 % fppm = estimateFPPM(spikeTrains, kernelSizeHandle)
 %
 % Input:
-%    spikeTrains: (struct) spikeTrains structure (see README.txt)
-%    kernelSizeHandle: (@(dim,N)) kernel size handle
-%                      (see defaultKernelSizeScaler)
+%   spikeTrains: (struct) spikeTrains structure (see README.txt)
+%   kernelSizeHandle: (@(dim,N)) kernel size handle
+%   sigma1: (1) kernel size in 1-D
 % Output:
-%    fppm: (struct) Estimated structure
+%   fppm: (struct) Estimated structure
 %
-% See also
+% See also: likelihoodFPPM, generateRealizationsFPPM, divHilbertian
 %
 % References
 % [1] Il Park, Sohan Seth, Jose C. Principe. "Divergence on finite point 
@@ -42,12 +42,8 @@ function [fppm] = estimateFPPM(spikeTrains, kernelSizeHandle)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-if nargin < 2
-    % Default 10 ms
-    kernelSizeHandle = @(d,n)(defaultKernelSizeScaler(d, n, 1e-2));
-end
-
 fppm.kernelSizeHandle = kernelSizeHandle;
+fppm.sigma1 = sigma1;
 fppm.spikeTrains = spikeTrains;
 fppm.duration = spikeTrains.duration;
 fppm.M = cellfun('length', spikeTrains.data);

@@ -74,39 +74,41 @@ end
 
 params.isSampleOnly = true;
 
-    function [sigma] = defaultKernelSizeScaler(dimension, n)
-    % [sigma] = defaultKernelSizeScaler(dimension, n)
-    % Computes the kernel size for target dimension given the number of samples
-    % Input:
-    %   dimension: (natural number) Demension of the data
-    %   n: (natural number) Total number of samples
-    % External variable scope:
-    %   sigma1: (double) Kernel size for one sample in one dimension
-    % Output:
-    %   sigma: (double) Kernel size
-    %
-    % Excerpt from [1]
-    % we used a spherical normal distribution with
-    % $\sigma_n = (\card{X^{(n)}})^{-\frac{1}{5}} \cdot \sqrt{n} \cdot \sigma_1$
-    % where $n \neq 1$ is the dimension and $\sigma_1 = 20 \mbox{ms}$
-    % is the bandwidth for a single sample in one dimension.
-
-	sigma = sqrt(dimension) * sigma1 * n^-.2;
-    end
-
-    function [sigma] = silvermanKernelSizeScaler(dimension, n)
-    % [sigma] = silvermanKernelSizeScaler(dimension, n)
-    % Uses Silverman's rule 1/N^(-1/(dimension+4))
-    % Computes the kernel size for target dimension given the number of samples
-    % Input:
-    %   dimension: (natural number) Demension of the data
-    %   n: (natural number) Total number of samples
-    % External variable scope:
-    %   sigma1: (double) Kernel size for one sample in one dimension
-    % Output:
-    %   sigma: (double) Kernel size
-
-	sigma = sigma1 * n^(-1/(4+dimension));
-    end
 end
+
+function [sigma] = defaultKernelSizeScaler(dimension, n, sigma1)
+% [sigma] = defaultKernelSizeScaler(dimension, n)
+% Computes the kernel size for target dimension given the number of samples
+% Input:
+%   dimension: (natural number) Demension of the data
+%   n: (natural number) Total number of samples
+% External variable scope:
+%   sigma1: (double) Kernel size for one sample in one dimension
+% Output:
+%   sigma: (double) Kernel size
+%
+% Excerpt from [1]
+% we used a spherical normal distribution with
+% $\sigma_n = (\card{X^{(n)}})^{-\frac{1}{5}} \cdot \sqrt{n} \cdot \sigma_1$
+% where $n \neq 1$ is the dimension and $\sigma_1 = 20 \mbox{ms}$
+% is the bandwidth for a single sample in one dimension.
+
+    sigma = sqrt(dimension) * sigma1 * n^-.2;
+end
+
+function [sigma] = silvermanKernelSizeScaler(dimension, n, sigma1)
+% [sigma] = silvermanKernelSizeScaler(dimension, n)
+% Uses Silverman's rule 1/N^(-1/(dimension+4))
+% Computes the kernel size for target dimension given the number of samples
+% Input:
+%   dimension: (natural number) Demension of the data
+%   n: (natural number) Total number of samples
+% External variable scope:
+%   sigma1: (double) Kernel size for one sample in one dimension
+% Output:
+%   sigma: (double) Kernel size
+
+    sigma = sigma1 * n^(-1/(4+dimension));
+end
+
 % vim:ts=8:sts=4:sw=4

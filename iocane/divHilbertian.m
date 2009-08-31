@@ -37,8 +37,8 @@ function [div] = divHilbertian(spikeTrains1, spikeTrains2, params)
 % POSSIBILITY OF SUCH DAMAGE.
 
 % FPPM case
-fppm1 = estimateFPPM(spikeTrains1, params.kernelSizeHandle);
-fppm2 = estimateFPPM(spikeTrains2, params.kernelSizeHandle);
+fppm1 = estimateFPPM(spikeTrains1, params.kernelSizeHandle, params.sigma1);
+fppm2 = estimateFPPM(spikeTrains2, params.kernelSizeHandle, params.sigma1);
 if params.isSampleOnly
     div = fppHilbertianMetricSamples(fppm1, fppm2, params.dist2Handle);
 else

@@ -48,7 +48,7 @@ for k = 1:N
     end
     templateIdx = floor(rand * (fppm.histM(m+1))) + 1;
     st = fppm.subSt{m}{templateIdx};
-    sigma = fppm.kernelSizeHandle(m, fppm.histM(m+1));
+    sigma = fppm.kernelSizeHandle(m, fppm.histM(m+1), fppm.sigma1);
     st = sort(st + randn(size(st)) * sigma);
 
     % TODO: what about fppm.duration? just warnings? truncate the PDF?

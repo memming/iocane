@@ -51,10 +51,10 @@ if fppm.histM(m+1) == 0
 end
 
 fh = fppm.kernelSizeHandle;
-sigma = fh(m, fppm.histM(m+1));
+sigma = fh(m, fppm.histM(m+1), fppm.sigma1);
 constNorm = (sqrt(2*pi) * sigma);
 stArray = fppm.subSt{m};
-x = stArray - repmat(spikeTrain(:)', size(stArray,1), 1);
+x = stArray - ones(size(stArray,1), 1) * spikeTrain(:)';
 d = exp(-0.5 * (x/sigma).^2) / constNorm;
 dd = sum(prod(d, 2));
 
