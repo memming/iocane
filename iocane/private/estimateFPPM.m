@@ -58,13 +58,13 @@ fppm.prN = fppm.histM / spikeTrains.N;
 
 fppm.subSt = cell(fppm.maxM, 1);
 for i = 1:fppm.maxM
-    subCell = cell(fppm.histM(i+1),1);
+    subArray = zeros(fppm.histM(i+1), i);
     kList = find(fppm.M == i);
     for kIdx = 1:length(kList)
 	k = kList(kIdx);
-	subCell{kIdx} = spikeTrains.data{k};
+	subArray(kIdx,:) = spikeTrains.data{k};
     end
-    fppm.subSt{i} = subCell;
+    fppm.subSt{i} = subArray;
 end
 
 % vim:ts=8:sts=4:sw=4

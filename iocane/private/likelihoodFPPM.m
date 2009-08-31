@@ -39,7 +39,6 @@ if m > fppm.maxM
     likelihood = 0;
     return;
 end
-sigma = fppm.kernelSizeHandle(m, fppm.histM(m+1));
 
 if m == 0
     likelihood = fppm.prN(m+1);
@@ -51,11 +50,13 @@ if fppm.histM(m+1) == 0
     return;
 end
 
-dd = 0;
-for k = 1:fppm.histM(m+1)
-    d = normpdf(fppm.subSt{m}{k} - spikeTrain, 0, sigma);
-    dd = dd + prod(d);
-end
+fh = fppm.kernelSizeHandle;
+sigma = fh(m, fppm.histM(m+1));
+constNorm = (sqrt(2*pi) * sigma);
+stArray = fppm.subSt{m};
+x = stArray - repmat(spikeTrain(:)', size(stArray,1), 1);
+d = exp(-0.5 * (x/sigma).^2) / constNorm;
+dd = sum(prod(d, 2));
 
 likelihood = fppm.prN(m+1) * dd / fppm.histM(m+1);
 % vim:ts=8:sts=4:sw=4
