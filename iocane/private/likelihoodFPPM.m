@@ -53,7 +53,7 @@ end
 
 dd = 0;
 for k = 1:fppm.histM(m+1)
-    d = normpdf(fppm.subSt{m}{k} - spikeTrain, zeros(m, 1), sigma * ones(m, 1));
+    d = normpdf(fppm.subSt{m}{k} - spikeTrain, 0, sigma);
     dd = dd + prod(d);
 end
 
