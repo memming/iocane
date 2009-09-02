@@ -1,6 +1,8 @@
 function [div] = divISI(spikeTrains1, spikeTrains2, params)
 % Divergence between the estimated inter spike interval (ISI) distributions
 % div = divISI(spikeTrains1, spikeTrains2, params)
+%
+% Note that when there is less than 2 spikes per trial, ISI does not exist.
 % 
 % Input:
 %   spikeTrains1, spikeTrains2: (struct) 2 sets of spike trains for comparison

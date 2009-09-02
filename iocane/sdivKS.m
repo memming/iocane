@@ -1,6 +1,9 @@
 function div = sdivKS(data1, data2, params)
 % Kolmogorov-Smirnov test statistic via empirical cdf estimator
 % div = sdivKS(data1, data2, params)
+%
+% KS statistic ranges from 0 to 1.
+% If any of the data is empty, the divergence is set to 1.
 % 
 % Input:
 %   data1, data2: (Nx1, Mx1) 2 sets of real values for comparison
@@ -36,10 +39,15 @@ function div = sdivKS(data1, data2, params)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
+if isempty(data1) || isempty(data2)
+    div = 1;
+    return
+end
+
 % estimate empirical ISI distributions
 edges = [-inf; sort([data1(:);data2(:)]); inf];
 cdf1 = cumsum(histc(data1, edges) / length(data1));
 cdf2 = cumsum(histc(data2, edges) / length(data2));
 
-div = max(abs(cdf1 - cdf2));
+div = max(abs(cdf1(:) - cdf2(:)));
 % vim:ts=8:sts=4:sw=4

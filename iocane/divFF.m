@@ -39,7 +39,10 @@ function [div] = divFF(spikeTrains1, spikeTrains2, params)
 M1 = cellfun('length', spikeTrains1.data);
 M2 = cellfun('length', spikeTrains2.data);
 
-FF1 = var(M1) / mean(M1);
-FF2 = var(M2) / mean(M2);
+m1 = mean(M1);
+m2 = mean(M1);
+
+if m1 == 0, FF1 = 1; else, FF1 = var(M1) / m1; end
+if m2 == 0, FF2 = 1; else, FF2 = var(M2) / m2; end
 div = (FF1 - FF2)^2;
 % vim:ts=8:sts=4:sw=4

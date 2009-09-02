@@ -70,6 +70,7 @@ while true
     k = k + 1;
 end
 
+divDist.unsorted = d_pairwise;
 divDist.values = sort(d_pairwise);
 divDist.N = length(d_pairwise);
 divDist.divHandle = divHandle;

@@ -48,6 +48,10 @@ div = sum((lambda1 - lambda2).^2) * params.dt;
 
     function lambda = estimateMarginalIntensity(spikeTrains)
 	allSpikes = flattenCell(spikeTrains.data);
+	if isempty(allSpikes)
+	    lambda = zeros(size(tr));
+	    return
+	end
 	sigma = params.kernelSizeHandle(allSpikes(:));
 	lambda = ksdensity(allSpikes(:), tr, 'width', sigma);
 	lambda = lambda * numel(allSpikes) / spikeTrains.N / spikeTrains.duration;
