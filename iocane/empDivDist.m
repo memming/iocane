@@ -76,7 +76,7 @@ divDist.N = length(d_pairwise);
 divDist.divHandle = divHandle;
 divDist.divParams = divParams;
 divDist.method = mfilename;
-divDist.pValue = @(alpha)(sum(divDist.values > alpha) / divDist.N);
+divDist.pValue = @(alpha)(sum(divDist.values >= alpha) / divDist.N);
 divDist.threshold = @(p)(divDist.values(ceil((1 - p) * divDist.N)));
 
     function [k1, k2] = defaultNext(k1, k2)
