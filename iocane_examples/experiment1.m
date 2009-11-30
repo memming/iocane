@@ -65,5 +65,11 @@ for kM = 1:M
     end
 end
 
-evaluateExperiment(spikeTrains1, spikeTrains2, M);
+divMeasures = {...
+    @divHilbertian, divHilbertianParams('Hellinger', 'default', 10e-3); ...
+    @divPhi, divPhiParams('Hellinger', 'default', 10e-3);
+};
+
+evaluateExperiment(spikeTrains1, spikeTrains2, M, 0.05, true, divMeasures);
+%evaluateExperiment(spikeTrains1, spikeTrains2, M);
 % vim:ts=8:sts=4:sw=4

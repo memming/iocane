@@ -1,11 +1,9 @@
-function [params] = divHilbertianParams(dist2Name, kernelSizeName, sigmaOne)
-% Generates parameters for the Hilbertian metric for point processes.
-% params = divHilbertianParams(dist2Name, kernelSizeName, sigmaOne)
+function [params] = divPhiParams(phiName, kernelSizeName, sigmaOne)
+% Generates parameters for the Phi-divergence for point processes.
+% params = divPhiParams(dist2Name, kernelSizeName, sigmaOne)
 % 
 % Input:
-%   dist2Name: (string) Name of the 1/2-homogeneous metric (see [1])
-%              Valid values: MSC, JS, Total-variation, Hellinger
-%              Default value is Hellinger
+%   phiName: (string) Name of the Phi-function
 %   kernelSizeName: (string) Name of the kernel size scaling method
 %              as number of samples and dimension grow
 %              Valid values: silverman, default
@@ -14,11 +12,7 @@ function [params] = divHilbertianParams(dist2Name, kernelSizeName, sigmaOne)
 % Output:
 %   params: (struct) ready to use for divHilbertian
 %
-% See also: divHilbertian
-%
-% References
-% [1] Matthias Hein, Olivier Bousquet. "Hilbertian Metrics and Positive Definite
-%   Kernels on Probability Measures" In AISTATS (2005)
+% See also: divPhi
 %
 % $Id$
 % Copyright 2009 iocane project. All rights reserved.
@@ -46,6 +40,12 @@ function [params] = divHilbertianParams(dist2Name, kernelSizeName, sigmaOne)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
+if nargin > 1
+    params.kernelSizeHandle = kernelSizeScalerFactory(kernelSizeName);
+else
+    params.kernelSizeHandle = kernelSizeScalerFactory();
+end
+
 if nargin > 2
     sigma1 = sigmaOne;
 else
@@ -53,18 +53,10 @@ else
 end
 params.sigma1 = sigma1;
 
-if nargin > 1
-    params.kernelSizeHandle = kernelSizeScalerFactory(kernelSizeName);
-else
-    params.kernelSizeHandle = kernelSizeScalerFactory();
-end
-
 if nargin > 0
-    params.dist2Handle = dist2HandleFactory(dist2Name);
+    params.phiHandle = phiHandleFactory(phiName);
 else
-    params.dist2Handle = dist2HandleFactory('Hellinger');
+    params.phiHandle = phiHandleFactory('Hellinger');
 end
-
-params.isSampleOnly = true;
 
 % vim:ts=8:sts=4:sw=4

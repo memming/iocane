@@ -1,24 +1,14 @@
-function [params] = divHilbertianParams(dist2Name, kernelSizeName, sigmaOne)
-% Generates parameters for the Hilbertian metric for point processes.
-% params = divHilbertianParams(dist2Name, kernelSizeName, sigmaOne)
+function [div] = divPhi(spikeTrains1, spikeTrains2, params)
+% Divergence between estimated the finite point processs via Phi-divergence
+% div = divPhi(spikeTrains1, spikeTrains2, params)
 % 
 % Input:
-%   dist2Name: (string) Name of the 1/2-homogeneous metric (see [1])
-%              Valid values: MSC, JS, Total-variation, Hellinger
-%              Default value is Hellinger
-%   kernelSizeName: (string) Name of the kernel size scaling method
-%              as number of samples and dimension grow
-%              Valid values: silverman, default
-%   sigmaOne: (1) the kernel size for the Parzen estimator at dimension 1
-%              Default value is 5 ms.
+%   spikeTrains1, spikeTrains2: (struct) 2 sets of spike trains for comparison
+%   params: (struct) see divPhiParams
 % Output:
-%   params: (struct) ready to use for divHilbertian
+%   div: (1) divergence value
 %
-% See also: divHilbertian
-%
-% References
-% [1] Matthias Hein, Olivier Bousquet. "Hilbertian Metrics and Positive Definite
-%   Kernels on Probability Measures" In AISTATS (2005)
+% See also: divPhiParams
 %
 % $Id$
 % Copyright 2009 iocane project. All rights reserved.
@@ -46,25 +36,8 @@ function [params] = divHilbertianParams(dist2Name, kernelSizeName, sigmaOne)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-if nargin > 2
-    sigma1 = sigmaOne;
-else
-    sigma1 = 5e-3;
-end
-params.sigma1 = sigma1;
-
-if nargin > 1
-    params.kernelSizeHandle = kernelSizeScalerFactory(kernelSizeName);
-else
-    params.kernelSizeHandle = kernelSizeScalerFactory();
-end
-
-if nargin > 0
-    params.dist2Handle = dist2HandleFactory(dist2Name);
-else
-    params.dist2Handle = dist2HandleFactory('Hellinger');
-end
-
-params.isSampleOnly = true;
-
+% FPPM case
+fppm1 = estimateFPPM(spikeTrains1, params.kernelSizeHandle, params.sigma1);
+fppm2 = estimateFPPM(spikeTrains2, params.kernelSizeHandle, params.sigma1);
+div = fppPhiDivRatio(fppm1, fppm2, params.phiHandle);
 % vim:ts=8:sts=4:sw=4
