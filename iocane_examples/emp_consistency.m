@@ -44,30 +44,16 @@ alpha = 0.05;
 % divParams = divHilbertianParams('Hellinger', 'default', 10e-3);
 
 divHandle = @divPhi;
-% divParams = divPhiParams('Hellinger', 'default', 10e-3);
-divParams = divPhiParams('total variation', 'default', 10e-3);
+divParams = divPhiParams('Hellinger', 'default', 10e-3);
+% divParams = divPhiParams('total variation', 'default', 10e-3);
 
-L = 4; % Number of precisely timed action potentials (or bumps in Poisson case)
-T = 1; % total duration
-
-% The mean position of APs
-mu = rand(L, 1) * T/2 + T/4;
-% The std of each AP
-sigma = rand(L, 1) * 0.010 + 0.001;
-% Probability of lossing each AP
-p = rand(L, 1);
-npcum = cumsum(p); % normalized cumulative for randomly choosing one for Poisson
-npcum = npcum / npcum(end);
-
-spikeTrains.duration = T;
-spikeTrains.source = '$Id$';
-spikeTrains.data = cell(mRange(end), 1);
-spikeTrains.samplingRate = Inf;
-
-for n = 1:nRealizations
-    spikeTrains1(n) = spikeTrains; % PTST
-    spikeTrains2(n) = spikeTrains; % Poisson
-end
+param.T = T;
+param.mISI = mISI;
+param.urISI = urISI;
+param.type = 'correlated';
+spikeTrains1 = genSerialCorr(N, M, param);
+param.type = 'uncorrelated'
+spikeTrains2 = genSerialCorr(N, M, param);
 
 for mIdx = 1:length(mRange)
     m = mRange(mIdx);
