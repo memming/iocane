@@ -35,7 +35,7 @@ function [div] = divCDF(spikeTrains1, spikeTrains2, params)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-if nargin < 3 || isempty(param)
+if nargin < 3 || isempty(params)
     params = Inf;
 end
 
