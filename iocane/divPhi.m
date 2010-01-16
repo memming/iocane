@@ -36,7 +36,11 @@ function [div] = divPhi(spikeTrains1, spikeTrains2, params)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-% FPPM case
+if isfield(params, 'lossyP') && (params.lossyP ~= 0)
+    spikeTrains1 = lossySmoothing(spikeTrains1, params);
+    spikeTrains2 = lossySmoothing(spikeTrains2, params);
+end
+
 fppm1 = estimateFPPM(spikeTrains1, params.kernelSizeHandle, params.sigma1);
 fppm2 = estimateFPPM(spikeTrains2, params.kernelSizeHandle, params.sigma1);
 div = fppPhiDivRatio(fppm1, fppm2, params.phiHandle);

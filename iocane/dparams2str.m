@@ -1,17 +1,16 @@
-function [div] = divHilbertian(spikeTrains1, spikeTrains2, params)
-% Divergence between estimated the finite point processs via Hilbertian metric
-% div = divHilbertian(spikeTrains1, spikeTrains2, params)
+function [str] = dparams2str(params)
+% Create short(?) description string for div*Param objects
+% str = dparams2str(params)
 % 
 % Input:
-%   spikeTrains1, spikeTrains2: (struct) 2 sets of spike trains for comparison
-%   params: (struct) see divHilbertianParams
+%   params: any data type parameter object to be converted (cell not supported)
 % Output:
-%   div: (1) divergence value
+%   str: the short string representation
 %
-% See also: divHilbertianParams
+% See also: div*Params
 %
 % $Id$
-% Copyright 2009 iocane project. All rights reserved.
+% Copyright 2010 iocane project. All rights reserved.
 
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted provided that the following conditions are met:
@@ -36,16 +35,57 @@ function [div] = divHilbertian(spikeTrains1, spikeTrains2, params)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-if isfield(params, 'lossyP') && (params.lossyP ~= 0)
-    spikeTrains1 = lossySmoothing(spikeTrains1, params);
-    spikeTrains2 = lossySmoothing(spikeTrains2, params);
+str = '';
+if isempty(params)
+    return;
 end
 
-fppm1 = estimateFPPM(spikeTrains1, params.kernelSizeHandle, params.sigma1);
-fppm2 = estimateFPPM(spikeTrains2, params.kernelSizeHandle, params.sigma1);
-if params.isSampleOnly
-    div = fppHilbertianMetricSamples(fppm1, fppm2, params.dist2Handle);
-else
-    div = fppHilbertianMetricMC(fppm1, fppm2, params.dist2Handle, params.NMC);
+if iscell(params)
+    warning('Cell type not supported.');
+    return;
 end
-% vim:ts=8:sts=4:sw=4
+
+if isa(params, 'function_handle')
+    str = func2str(params);
+    return;
+end
+
+if isstruct(params)
+    if isfield(params, 'desc')
+	str = params.desc;
+    else
+	str = '(';
+	fns = fieldnames(params);
+	for k = 1:length(fns)
+	    val = getfield(params, fns{k});
+	    str = [str sprintf('%s=%s', fns{k}, dparams2str(val))];
+	    if k ~= length(fns)
+		str = [str ','];
+	    end
+	end
+	str = [str ')'];
+    end
+    return;
+end
+
+if isnumeric(params)
+    if numel(params) == 1
+	str = num2str(params);
+	return;
+    end
+    % Now it's a array of something
+    str = '[';
+    for k = 1:numel(params)
+	str = [str sprintf('%s', dparams2str(params(k)))];
+	if k ~= numel(params)
+	    str = [str ','];
+	end
+    end
+    str = [str ']'];
+    return;
+end
+
+if ischar(params) || isstring(params)
+    str = params;
+    return;
+end

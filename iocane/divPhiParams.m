@@ -1,6 +1,6 @@
-function [params] = divPhiParams(phiName, kernelSizeName, sigmaOne)
+function [params] = divPhiParams(phiName, kernelSizeName, sigmaOne, lossyP)
 % Generates parameters for the Phi-divergence for point processes.
-% params = divPhiParams(dist2Name, kernelSizeName, sigmaOne)
+% params = divPhiParams(dist2Name, kernelSizeName, sigmaOne, lossyP)
 % 
 % Input:
 %   phiName: (string) Name of the Phi-function
@@ -9,8 +9,10 @@ function [params] = divPhiParams(phiName, kernelSizeName, sigmaOne)
 %              Valid values: silverman, default
 %   sigmaOne: (1) the kernel size for the Parzen estimator at dimension 1
 %              Default value is 5 ms.
+%   lossyP: (1/optional) smoothing due to lossy APs to double the number of
+%	    samples used to estimate the divergence.
 % Output:
-%   params: (struct) ready to use for divHilbertian
+%   params: (struct) ready to use for divPhi
 %
 % See also: divPhi
 %

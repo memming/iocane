@@ -1,6 +1,6 @@
-function [params] = divHilbertianParams(dist2Name, kernelSizeName, sigmaOne)
+function [params] = divHilbertianParams(dist2Name, kernelSizeName, sigmaOne, lossyP)
 % Generates parameters for the Hilbertian metric for point processes.
-% params = divHilbertianParams(dist2Name, kernelSizeName, sigmaOne)
+% params = divHilbertianParams(dist2Name, kernelSizeName, sigmaOne, lossyP)
 % 
 % Input:
 %   dist2Name: (string) Name of the 1/2-homogeneous metric (see [1])
@@ -11,6 +11,8 @@ function [params] = divHilbertianParams(dist2Name, kernelSizeName, sigmaOne)
 %              Valid values: silverman, default
 %   sigmaOne: (1) the kernel size for the Parzen estimator at dimension 1
 %              Default value is 5 ms.
+%   lossyP: (1/optional) smoothing due to lossy APs to double the number of
+%	    samples used to estimate the divergence.
 % Output:
 %   params: (struct) ready to use for divHilbertian
 %
@@ -45,6 +47,10 @@ function [params] = divHilbertianParams(dist2Name, kernelSizeName, sigmaOne)
 % CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
+
+if nargin > 3
+    params.lossyP = lossyP;
+end
 
 if nargin > 2
     sigma1 = sigmaOne;
