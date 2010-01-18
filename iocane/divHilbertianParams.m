@@ -8,9 +8,9 @@ function [params] = divHilbertianParams(dist2Name, kernelSizeName, sigmaOne, los
 %              Default value is Hellinger
 %   kernelSizeName: (string) Name of the kernel size scaling method
 %              as number of samples and dimension grow
-%              Valid values: silverman, default
+%              Valid values: silverman, default, knn
 %   sigmaOne: (1) the kernel size for the Parzen estimator at dimension 1
-%              Default value is 5 ms.
+%              Default value is 5 ms. If knn is used, then this is the 'k'.
 %   lossyP: (1/optional) smoothing due to lossy APs to double the number of
 %	    samples used to estimate the divergence.
 % Output:
@@ -57,12 +57,22 @@ if nargin > 2
 else
     sigma1 = 5e-3;
 end
-params.sigma1 = sigma1;
 
 if nargin > 1
-    params.kernelSizeHandle = kernelSizeScalerFactory(kernelSizeName);
+    if strcmp(lower(kernelSizeName), 'knn')
+	if sigmaOne > 0 && (sigmaOne - round(sigmaOne)) == 0
+	    params.kNearest = sigmaOne;
+	else
+	    warning('kNN adaptive estimator requires integer as k');
+	    params.kNearest = 1;
+	end
+    else
+	params.kernelSizeHandle = kernelSizeScalerFactory(kernelSizeName);
+	params.sigma1 = sigma1;
+    end
 else
     params.kernelSizeHandle = kernelSizeScalerFactory();
+    params.sigma1 = sigma1;
 end
 
 if nargin > 0

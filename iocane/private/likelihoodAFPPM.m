@@ -1,25 +1,15 @@
-function d = fppHilbertianMetricSamples(fppm1, fppm2, dist2Handle)
-% Compute the Hilbertian metric between finite point process models
-% d = fppHilbertianMetricSamples(fppm1, fppm2, dist2Handle)
-% using Monte Carlo method, no samples are generated. All samples
-% in the FPP model are used.
+function [likelihood] = likelihoodAFPPM(afppm, spikeTrain)
+% likelihood that cares about the order of APs
+% likelihood = likelihoodAFPPM(afppm, spikeTrain)
 %
 % Input:
-%   fppm1, fppm2: (struct) FPPM (see estimateFPPM)
-%   dist2Handle: (@) 1-homogeneous suqare metric on positive reals
-%                 (see dist2HandleFactory)
+%   afppm: (struct) AFPPM struct (see estimateAFPPM)
+%   spikeTrain: (mx1) a single spike train represented as sorted times
 % Output:
-%   d: (double) computed square divergence
-%
-% References
-% [1] Il Park, Sohan Seth, Jose C. Principe. "Divergence on finite point 
-%   processes for multiple trial spike train observations",
-%   (submitted to NIPS 2009)
-%
-% See also fppHilbertianMetricMC, estimateFPPM, dist2HandleFactory
+%   likelihood: (double) likelihood value
 %
 % $Id$
-% Copyright 2009 Memming. All rights reserved.
+% Copyright 2010 iocane. All rights reserved.
 
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted provided that the following conditions are met:
@@ -44,24 +34,27 @@ function d = fppHilbertianMetricSamples(fppm1, fppm2, dist2Handle)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-dTemp1 = zeros(fppm1.spikeTrains.N, 1);
-dTemp2 = zeros(fppm2.spikeTrains.N, 1);
-
-for k = 1:fppm1.spikeTrains.N
-    % use measure p/2
-    st = fppm1.spikeTrains.data{k};
-    j1 = fppm1.likelihood(fppm1, st);
-    j2 = fppm1.likelihood(fppm2, st);
-    dTemp1(k) = dist2Handle(j1, j2) * 2 / (j1 + j2);
+m = length(spikeTrain);
+if m > afppm.maxM
+    likelihood = 0;
+    return;
 end
 
-for k = 1:fppm2.spikeTrains.N
-    % use measure q/2
-    st = fppm2.spikeTrains.data{k};
-    j1 = fppm2.likelihood(fppm1, st);
-    j2 = fppm2.likelihood(fppm2, st);
-    dTemp2(k) = dist2Handle(j1, j2) * 2 / (j1 + j2);
+if m == 0
+    likelihood = afppm.prN(m+1);
+    return;
 end
 
-d = mean([dTemp1;dTemp2]);
+if afppm.histM(m+1) == 0
+    likelihood = 0;
+    return;
+end
+
+constNorm = (sqrt(2*pi)^(m+1) * (afppm.sigmas{m}));
+stArray = afppm.subSt{m};
+x = stArray - ones(size(stArray,1), 1) * spikeTrain(:)';
+d = exp(-0.5 * sum(x.^2,2)./afppm.sigmas{m}) ./ constNorm;
+dd = sum(d) / afppm.histM(m+1);
+
+likelihood = afppm.prN(m+1) * dd / afppm.histM(m+1);
 % vim:ts=8:sts=4:sw=4

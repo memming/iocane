@@ -41,8 +41,14 @@ if isfield(params, 'lossyP') && (params.lossyP ~= 0)
     spikeTrains2 = lossySmoothing(spikeTrains2, params);
 end
 
-fppm1 = estimateFPPM(spikeTrains1, params.kernelSizeHandle, params.sigma1);
-fppm2 = estimateFPPM(spikeTrains2, params.kernelSizeHandle, params.sigma1);
+if isfield(params, 'kernelSizeHandle')
+    fppm1 = estimateFPPM(spikeTrains1, params.kernelSizeHandle, params.sigma1);
+    fppm2 = estimateFPPM(spikeTrains2, params.kernelSizeHandle, params.sigma1);
+else
+    fppm1 = estimateAFPPM(spikeTrains1, params.kNearest);
+    fppm2 = estimateAFPPM(spikeTrains2, params.kNearest);
+end
+
 if params.isSampleOnly
     div = fppHilbertianMetricSamples(fppm1, fppm2, params.dist2Handle);
 else

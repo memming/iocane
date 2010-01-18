@@ -1,23 +1,23 @@
-function [fppm] = estimateFPPM(spikeTrains, kernelSizeHandle, sigma1)
-% Estimate FPPM via nonparametric estimator using Parzen window
-% fppm = estimateFPPM(spikeTrains, kernelSizeHandle)
+function [afppm] = estimateAFPPM(spikeTrains, kNearest)
+% Estimate adaptive FPPM via nonparametric estimator using Parzen window
+% afppm = estimateAFPPM(spikeTrains, kernelSizeHandle)
 %
 % Input:
 %   spikeTrains: (struct) spikeTrains structure (see README.txt)
-%   kernelSizeHandle: (@(dim,N)) kernel size handle
-%   sigma1: (1) kernel size in 1-D
+%   kNearest: (1) the k for k-NN based adaptive kernel size
 % Output:
-%   fppm: (struct) Estimated structure
+%   afppm: (struct) Estimated structure
 %
-% See also: likelihoodFPPM, generateRealizationsFPPM, divHilbertian
+% See also: estimateFPPM, likelihoodAFPPM
 %
-% References
-% [1] Il Park, Sohan Seth, Jose C. Principe. "Divergence on finite point 
-%   processes for multiple trial spike train observations",
-%   (submitted to NIPS 2009)
+% In addition to FPPM, AFPPM computes the pairwise distance in each dimension
+% and save the k-nearest neighbor, so that it can be used for adaptive kernel
+% density estimation.
+%
+% Sohan Seth gave the idea to try this kind of estimator.
 %
 % $Id$
-% Copyright 2009 Memming. All rights reserved.
+% Copyright 2010 iocane. All rights reserved.
 
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted provided that the following conditions are met:
@@ -42,27 +42,42 @@ function [fppm] = estimateFPPM(spikeTrains, kernelSizeHandle, sigma1)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-fppm.kernelSizeHandle = kernelSizeHandle;
-fppm.sigma1 = sigma1;
-fppm.spikeTrains = spikeTrains;
-fppm.duration = spikeTrains.duration;
-fppm.M = cellfun('length', spikeTrains.data);
-fppm.maxM = max(fppm.M);
-fppm.histM = histc(fppm.M, 0:1:fppm.maxM);
+afppm.spikeTrains = spikeTrains;
+afppm.duration = spikeTrains.duration;
+afppm.M = cellfun('length', spikeTrains.data);
+afppm.maxM = max(afppm.M);
+afppm.histM = histc(afppm.M, 0:1:afppm.maxM);
 
-fppm.prN = fppm.histM / spikeTrains.N;
-fppm.likelihood = @likelihoodFPPM;
+afppm.prN = afppm.histM / spikeTrains.N;
+afppm.likelihood = @likelihoodAFPPM;
 
-fppm.subSt = cell(fppm.maxM, 1);
-for i = 1:fppm.maxM
-    N = fppm.histM(i+1);
+afppm.subSt = cell(afppm.maxM, 1);
+for i = 1:afppm.maxM
+    N = afppm.histM(i+1);
     subArray = zeros(N, i);
-    kList = find(fppm.M == i);
+    kList = find(afppm.M == i);
     for kIdx = 1:length(kList)
 	k = kList(kIdx);
 	subArray(kIdx,:) = spikeTrains.data{k};
     end
-    fppm.subSt{i} = subArray;
+    afppm.subSt{i} = subArray;
+
+    % compute the pairwise distance
+    d = zeros(N, N);
+    for k = 1:N-1
+	for kk = (k+1):N
+	    d(k, kk) = sum(subArray(k,:) - subArray(kk,:)).^2;
+	end
+    end
+    d = d + d';
+    dkNN = zeros(N, 1);
+    d = sort(d, 2, 'ascend');
+    if kNearest+1 > N
+	dkNN = d(:,end);
+    else
+	dkNN = d(:,kNearest+1);
+    end
+    afppm.sigmas{i} = sqrt(30 * dkNN / kNearest).^(i+1);
 end
 
 % vim:ts=8:sts=4:sw=4
