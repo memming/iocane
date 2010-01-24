@@ -69,15 +69,15 @@ for countDim = 1:d
     Kyy = Kyy .* min(repmat(Y(:,countDim),1,ny), repmat((Y(:,countDim))',ny,1));
 end
 
-if isempty(Kxx); Kxx = 0; end
-if isempty(Kyx); Kyx = 0; end
-if isempty(Kyy); Kyy = 0; end
-
 ox = ones(1, nx); oy = ones(1, ny);
 
 sKxx = ox * Kxx * ox';
 sKyy = oy * Kyy * oy';
 sKyx = oy * Kyx * ox';
+
+if isempty(sKxx); sKxx = 0; end
+if isempty(sKyx); sKyx = 0; end
+if isempty(sKyy); sKyy = 0; end
 
 div = p1^2 * sKxx + p2^2 * sKyy - 2 * p1 * p2 * sKyx;
 % vim:ts=8:sts=4:sw=4
