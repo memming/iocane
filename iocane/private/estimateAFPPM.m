@@ -62,6 +62,11 @@ for i = 1:afppm.maxM
     end
     afppm.subSt{i} = subArray;
 
+    if N == 0
+	afppm.sigmas{i} = [];
+	continue;
+    end
+
     % compute the pairwise distance
     d = zeros(N, N);
     for k = 1:N-1
@@ -70,14 +75,14 @@ for i = 1:afppm.maxM
 	end
     end
     d = d + d';
-    dkNN = zeros(N, 1);
     d = sort(d, 2, 'ascend');
+    dkNN = zeros(N, 1);
     if kNearest+1 > N
 	dkNN = d(:,end);
     else
 	dkNN = d(:,kNearest+1);
     end
-    afppm.sigmas{i} = sqrt(30 * dkNN / kNearest).^(i+1);
+    afppm.sigmas{i} = (10 / kNearest * sqrt(dkNN)).^(i+1);
 end
 
 % vim:ts=8:sts=4:sw=4
