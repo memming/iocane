@@ -1,18 +1,15 @@
-function div = sdivCDF(X, Y, p, p1, p2)
-% Divergence based on Lp norm of empirical CDF difference
-% div = sdivCDF(X, Y, p)
-%
-% Input
-%   x, y: (NxM) N vectors of M dimension (column vectors)
-%   p: (1) p for the Lp norm (0 < p < Inf)
-%   p1, p2: (1/optional) probability of X, Y happening...when merging for divCDF
+function [div] = divISF(spikeTrains1, spikeTrains2, params)
+% Integration of square distance between survival function based divergence.
+% div = divICDF(spikeTrains1, spikeTrains2, params)
+% 
+% Input:
+%   spikeTrains1, spikeTrains2: (struct) 2 sets of spike trains for comparison
 % Output:
-%   div^p: \frac{1}{n} \sum_{i=1}^n |F_{X}(x_i) - G_{Y}(x_i)|^p
+%   div: (1) divergence value
 %
-% Original author - Sohan Seth; Date - 12.08.2009
+% Original idea from Sohan Seth
 %
 % $Id$
-%
 % Copyright 2010 iocane project. All rights reserved.
 
 % Redistribution and use in source and binary forms, with or without
@@ -38,46 +35,43 @@ function div = sdivCDF(X, Y, p, p1, p2)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-if nargin < 1 | nargin > 5
-    error('Invalid number of input arguments')
+if nargin < 3 || isempty(params)
+    params = Inf;
 end
 
-if nargin == 2
-    p = 1;
+M1 = cellfun('length', spikeTrains1.data);
+M2 = cellfun('length', spikeTrains2.data);
+MM1 = sum(M1); MM2 = sum(M2);
+maxM1 = max(M1);
+maxM2 = max(M2);
+maxM = max(maxM1, maxM2);
+histM1 = histc(M1, 0:1:maxM);
+histM2 = histc(M2, 0:1:maxM);
+
+div = zeros(maxM+1, 1);
+div(end) = abs(histM1(1)/MM1 - histM2(1)/MM2);
+
+for ki = 1:maxM
+    X = zeros(histM1(ki+1), ki);
+    Y = zeros(histM2(ki+1), ki);
+
+    kList = find(M1 == ki);
+    p1 = length(kList) / MM1;
+    for kIdx = 1:length(kList)
+	k = kList(kIdx);
+	X(kIdx,:) = spikeTrains1.data{k};
+    end
+
+    kList = find(M2 == ki);
+    p2 = length(kList) / MM2;
+    for kIdx = 1:length(kList)
+	k = kList(kIdx);
+	Y(kIdx,:) = spikeTrains2.data{k};
+    end
+
+    div(ki) = sdivISF(X, Y, p1, p2);
 end
 
-if nargin < 4
-    p1 = 1;
-    p2 = 1;
-end
-
-[nx, d1] = size(X); [ny, d2] = size(Y);
-
-if d1 ~= d2
-    error('X-Y dimension mismatch')
-end
-
-d = d1;
-Kxx = ones(nx,nx); Kyx = ones(ny,nx); Kxy = ones(nx,ny); Kyy = ones(ny,ny);
-
-for countDim = 1:d
-    Kxx = Kxx .* (repmat(X(:,countDim),1,nx) <= repmat((X(:,countDim))',nx,1));
-    Kyx = Kyx .* (repmat(Y(:,countDim),1,nx) <= repmat((X(:,countDim))',ny,1));
-    Kxy = Kxy .* (repmat(X(:,countDim),1,ny) <= repmat((Y(:,countDim))',nx,1));
-    Kyy = Kyy .* (repmat(Y(:,countDim),1,ny) <= repmat((Y(:,countDim))',ny,1));
-end
-
-if isempty(Kxx); Kxx = 0; end
-if isempty(Kxy); Kxy = 0; end
-if isempty(Kyx); Kyx = 0; end
-if isempty(Kyy); Kyy = 0; end
-
-if isinf(p)
-    div = 0.5 * (max(abs(p1 * mean(Kxx) - p2 * mean(Kyx))) ...
-	+ max(abs(p1 * mean(Kxy) - p2 * mean(Kyy))));
-else
-    div = 0.5 * ((mean((abs(p1 * mean(Kxx) - p2 * mean(Kyx))).^p))^(1/p) ...
-	+ (mean((abs(p1 * mean(Kxy) - p2 * mean(Kyy))).^p))^(1/p));
-end
+div = sum(div);
 
 % vim:ts=8:sts=4:sw=4

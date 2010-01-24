@@ -85,6 +85,15 @@ if isnumeric(params)
     return;
 end
 
+if isa(params, 'logical')
+    if params
+        str = 'true';
+    else
+        str = 'false';
+    end
+    return;
+end
+
 if ischar(params) || isstring(params)
     str = params;
     return;

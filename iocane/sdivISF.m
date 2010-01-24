@@ -1,15 +1,21 @@
-function div = sdivCDF(X, Y, p, p1, p2)
-% Divergence based on Lp norm of empirical CDF difference
-% div = sdivCDF(X, Y, p)
+function div = sdivISF(X, Y, p1, p2)
+% Integration of square distance between survival function based divergence.
+% div = sdivICDF(X, Y, p1, p2)
 %
 % Input
 %   x, y: (NxM) N vectors of M dimension (column vectors)
-%   p: (1) p for the Lp norm (0 < p < Inf)
-%   p1, p2: (1/optional) probability of X, Y happening...when merging for divCDF
+%   p1, p2: (1/optional) probability of X, Y happening..when merging for divICDF
 % Output:
-%   div^p: \frac{1}{n} \sum_{i=1}^n |F_{X}(x_i) - G_{Y}(x_i)|^p
+%   div: \int (F_{X}(x) - G_{Y}(x))^2 dx where F and G are 
+%	empirical survival functions.
 %
-% Original author - Sohan Seth; Date - 12.08.2009
+% Original idea f - Sohan Seth
+%
+% Reference
+% [1] Ting Chen, Baba Vemuri, Anand Rangarajan, Stephan Eisenschenk.
+%   Group-Wise Point-Set Registration Using a Novel CDF-Based Havrda-Charvát
+%   Divergence. International Journal of Computer Vision, Vol. 86, No. 1.
+%   (1 January 2010), pp. 111-124.
 %
 % $Id$
 %
@@ -38,15 +44,11 @@ function div = sdivCDF(X, Y, p, p1, p2)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-if nargin < 1 | nargin > 5
+if nargin < 1 | nargin > 4
     error('Invalid number of input arguments')
 end
 
-if nargin == 2
-    p = 1;
-end
-
-if nargin < 4
+if nargin < 3
     p1 = 1;
     p2 = 1;
 end
@@ -58,26 +60,24 @@ if d1 ~= d2
 end
 
 d = d1;
-Kxx = ones(nx,nx); Kyx = ones(ny,nx); Kxy = ones(nx,ny); Kyy = ones(ny,ny);
+
+Kxx = ones(nx,nx); Kyx = ones(ny,nx); Kyy = ones(ny,ny);
 
 for countDim = 1:d
-    Kxx = Kxx .* (repmat(X(:,countDim),1,nx) <= repmat((X(:,countDim))',nx,1));
-    Kyx = Kyx .* (repmat(Y(:,countDim),1,nx) <= repmat((X(:,countDim))',ny,1));
-    Kxy = Kxy .* (repmat(X(:,countDim),1,ny) <= repmat((Y(:,countDim))',nx,1));
-    Kyy = Kyy .* (repmat(Y(:,countDim),1,ny) <= repmat((Y(:,countDim))',ny,1));
+    Kxx = Kxx .* min(repmat(X(:,countDim),1,nx), repmat((X(:,countDim))',nx,1));
+    Kyx = Kyx .* min(repmat(Y(:,countDim),1,nx), repmat((X(:,countDim))',ny,1));
+    Kyy = Kyy .* min(repmat(Y(:,countDim),1,ny), repmat((Y(:,countDim))',ny,1));
 end
 
 if isempty(Kxx); Kxx = 0; end
-if isempty(Kxy); Kxy = 0; end
 if isempty(Kyx); Kyx = 0; end
 if isempty(Kyy); Kyy = 0; end
 
-if isinf(p)
-    div = 0.5 * (max(abs(p1 * mean(Kxx) - p2 * mean(Kyx))) ...
-	+ max(abs(p1 * mean(Kxy) - p2 * mean(Kyy))));
-else
-    div = 0.5 * ((mean((abs(p1 * mean(Kxx) - p2 * mean(Kyx))).^p))^(1/p) ...
-	+ (mean((abs(p1 * mean(Kxy) - p2 * mean(Kyy))).^p))^(1/p));
-end
+ox = ones(1, nx); oy = ones(1, ny);
 
+sKxx = ox * Kxx * ox';
+sKyy = oy * Kyy * oy';
+sKyx = oy * Kyx * ox';
+
+div = p1^2 * sKxx + p2^2 * sKyy - 2 * p1 * p2 * sKyx;
 % vim:ts=8:sts=4:sw=4
