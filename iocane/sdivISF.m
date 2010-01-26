@@ -71,9 +71,9 @@ end
 
 ox = ones(1, nx); oy = ones(1, ny);
 
-sKxx = ox * Kxx * ox';
-sKyy = oy * Kyy * oy';
-sKyx = oy * Kyx * ox';
+sKxx = ox * Kxx * ox' / nx^2;
+sKyy = oy * Kyy * oy' / ny^2;
+sKyx = oy * Kyx * ox' / nx / ny;
 
 if isempty(sKxx); sKxx = 0; end
 if isempty(sKyx); sKyx = 0; end
