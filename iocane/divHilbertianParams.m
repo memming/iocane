@@ -13,6 +13,8 @@ function [params] = divHilbertianParams(dist2Name, kernelSizeName, sigmaOne, los
 %              Default value is 5 ms. If knn is used, then this is the 'k'.
 %   lossyP: (1/optional) smoothing due to lossy APs to double the number of
 %	    samples used to estimate the divergence.
+%   lossyP: (1/optional) smoothing due to lossy APs to double the number of
+%	    samples used to estimate the divergence.
 % Output:
 %   params: (struct) ready to use for divHilbertian
 %

@@ -12,7 +12,7 @@ function [params] = divL2PoissonParams(dt, mode, kernelSize)
 %   kernelSize: (1) fixed kernel size for smoothing
 %
 % Output:
-%   params: (struct) ready to use for divCount
+%   params: (struct) ready to use for divL2Poisson
 %
 % See also: divL2Poisson, sskernel
 %

@@ -1,16 +1,23 @@
-function [div] = divCDF(spikeTrains1, spikeTrains2, params)
-% Generalized KS-like divergence between the empirical CDFs
-% div = divCDF(spikeTrains1, spikeTrains2, params)
-% 
+function [params] = divCDFParams(p, mode)
+% Generates parameters for the div based on marginal intensity function
+% params = divL2PoissonParams(dt, mode, kernelSize)
+%
+% The intensity function is smoothed with a kernel (Gaussian).
+%
 % Input:
-%   spikeTrains1, spikeTrains2: (struct) 2 sets of spike trains for comparison
-%   params: (1/optional) p for p-norm of the CDF difference (0<p<=Inf)
+%   p: (1/optional) p for p-norm of the CDF difference (0<p<=Inf)
 %           Default value is Inf.
+%   mode: (string) type of aggregation method.
+%         'sum': takes summation over the partitions
+%         'sup': takes supremum over the partitions
+%
 % Output:
-%   div: (1) divergence value
+%   params: (struct) ready to use for divCDF
+%
+% See also: divCDF
 %
 % $Id$
-% Copyright 2010 iocane project. All rights reserved.
+% Copyright 2009 iocane project. All rights reserved.
 
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted provided that the following conditions are met:
@@ -35,51 +42,14 @@ function [div] = divCDF(spikeTrains1, spikeTrains2, params)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-if nargin < 3 || isempty(params)
-    p = Inf;
-    isSum = false;
-else
-    p = params.p;
-    isSum = params.isSum;
-end
-
-M1 = cellfun('length', spikeTrains1.data);
-M2 = cellfun('length', spikeTrains2.data);
-MM1 = sum(M1); MM2 = sum(M2);
-maxM1 = max(M1);
-maxM2 = max(M2);
-maxM = max(maxM1, maxM2);
-histM1 = histc(M1, 0:1:maxM);
-histM2 = histc(M2, 0:1:maxM);
-
-div = zeros(maxM+1, 1);
-div(end) = abs(histM1(1)/MM1 - histM2(1)/MM2);
-
-for ki = 1:maxM
-    X = zeros(histM1(ki+1), ki);
-    Y = zeros(histM2(ki+1), ki);
-
-    kList = find(M1 == ki);
-    p1 = length(kList) / MM1;
-    for kIdx = 1:length(kList)
-	k = kList(kIdx);
-	X(kIdx,:) = spikeTrains1.data{k};
-    end
-
-    kList = find(M2 == ki);
-    p2 = length(kList) / MM2;
-    for kIdx = 1:length(kList)
-	k = kList(kIdx);
-	Y(kIdx,:) = spikeTrains2.data{k};
-    end
-
-    div(ki) = sdivCDF(X, Y, p, p1, p2);
-end
-
-if isSum
-    div = sum(div);
-else
-    div = max(div);
+params.p = p;
+switch(lower(mode))
+case {'sum'}
+    params.isSum = true;
+case {'sup', 'max', 'default'}
+    params.isSum = false;
+otherwise
+    params.isSum = false;
 end
 
 % vim:ts=8:sts=4:sw=4

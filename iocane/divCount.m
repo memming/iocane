@@ -40,11 +40,4 @@ M1 = cellfun('length', spikeTrains1.data);
 M2 = cellfun('length', spikeTrains2.data);
 
 div = params.subDiv(M1, M2, params.subDivParams);
-
-%{ % Original KS test statistic function
-maxM = max(max(M1), max(M2));
-hM1 = histc(M1, 0:1:maxM);
-hM2 = histc(M2, 0:1:maxM);
-div = max(abs(cumsum(hM1) - cumsum(hM2)));
-%}
 % vim:ts=8:sts=4:sw=4
