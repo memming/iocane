@@ -76,8 +76,9 @@ if isinf(p)
     div = max(max(abs(p1 * mean(Kxx) - p2 * mean(Kyx))), ...
 	  max(abs(p1 * mean(Kxy) - p2 * mean(Kyy))));
 else
-    div = 0.5 * ((mean((abs(p1 * mean(Kxx) - p2 * mean(Kyx))).^p))^(1/p) ...
-	+ (mean((abs(p1 * mean(Kxy) - p2 * mean(Kyy))).^p))^(1/p));
+    div = (0.5 * ((mean((abs(p1 * mean(Kxx) - p2 * mean(Kyx))).^p)) ...
+	+ (mean((abs(p1 * mean(Kxy) - p2 * mean(Kyy))).^p))))^(1/p);
+    % sqrt after averaging (equivalent to integrating over d(F+G)/2)
 end
 
 % vim:ts=8:sts=4:sw=4

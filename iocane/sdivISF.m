@@ -75,9 +75,5 @@ if nx ~= 0; sKxx = ox * Kxx * ox' / nx^2; else sKxx = 0; end
 if ny ~= 0; sKyy = oy * Kyy * oy' / ny^2; else sKyy = 0; end
 if nx ~= 0 && ny ~= 0; sKyx = oy * Kyx * ox' / nx / ny; else sKyx = 0; end
 
-if isempty(sKxx); sKxx = 0; end
-if isempty(sKyx); sKyx = 0; end
-if isempty(sKyy); sKyy = 0; end
-
 div = p1^2 * sKxx + p2^2 * sKyy - 2 * p1 * p2 * sKyx;
 % vim:ts=8:sts=4:sw=4

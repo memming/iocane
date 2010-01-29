@@ -45,7 +45,8 @@ end
 
 M1 = cellfun('length', spikeTrains1.data);
 M2 = cellfun('length', spikeTrains2.data);
-MM1 = sum(M1); MM2 = sum(M2);
+MM1 = spikeTrains1.N;
+MM2 = spikeTrains2.N;
 maxM1 = max(M1);
 maxM2 = max(M2);
 maxM = max(maxM1, maxM2);
