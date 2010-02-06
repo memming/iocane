@@ -70,6 +70,14 @@ while true
     k = k + 1;
 end
 
+if any(isnan(d_pairwise))
+    warning('There are NaN values in the divergence!');
+end
+
+if any(isinf(d_pairwise))
+    warning('There are Inf values in the divergence!');
+end
+
 divDist.unsorted = d_pairwise;
 divDist.values = sort(d_pairwise);
 divDist.N = length(d_pairwise);

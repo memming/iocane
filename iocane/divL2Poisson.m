@@ -41,20 +41,10 @@ function [div] = divL2Poisson(spikeTrains1, spikeTrains2, params)
 tr = 0:params.dt:max(spikeTrains1.duration, spikeTrains2.duration);
 
 % estimate the rate function
-lambda1 = estimateMarginalIntensity(spikeTrains1);
-lambda2 = estimateMarginalIntensity(spikeTrains2);
+lambda1 = params.estimateMarginalIntensity(tr, spikeTrains1);
+lambda2 = params.estimateMarginalIntensity(tr, spikeTrains2);
 
 div = sum((lambda1 - lambda2).^2) * params.dt;
 
-    function lambda = estimateMarginalIntensity(spikeTrains)
-	allSpikes = flattenCell(spikeTrains.data);
-	if isempty(allSpikes)
-	    lambda = zeros(size(tr));
-	    return
-	end
-	sigma = params.kernelSizeHandle(allSpikes(:));
-	lambda = ksdensity(allSpikes(:), tr, 'width', sigma);
-	lambda = lambda * numel(allSpikes) / spikeTrains.N / spikeTrains.duration;
-    end
 end
 % vim:ts=8:sts=4:sw=4

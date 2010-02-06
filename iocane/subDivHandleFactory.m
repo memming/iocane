@@ -45,6 +45,9 @@ switch(lower(subDivName))
 case {'ks', 'kolmogorov-smirnov'}
     divHandle = @sdivKS;
     divParams = [];
+case {'cm', 'cramer-von-meise'}
+    divHandle = @sdivCM;
+    divParams = [];
 otherwise
     error('Unknown sub-divergence');
 end

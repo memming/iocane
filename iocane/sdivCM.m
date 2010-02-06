@@ -1,8 +1,7 @@
-function div = sdivKS(data1, data2, params)
-% Kolmogorov-Smirnov test statistic via empirical cdf estimator
-% div = sdivKS(data1, data2, params)
+function div = sdivCM(data1, data2, params)
+% Cramer-von-Miese test statistic via empirical cdf estimator
+% div = sdivCM(data1, data2, params)
 %
-% KS statistic ranges from 0 to 1.
 % If any of the data is empty, the divergence is set to 1.
 % 
 % Input:
@@ -14,7 +13,7 @@ function div = sdivKS(data1, data2, params)
 % See also: divCountParams, divISIParams, divTTFSParams
 %
 % $Id$
-% Copyright 2009 iocane project. All rights reserved.
+% Copyright 2010 iocane project. All rights reserved.
 
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted provided that the following conditions are met:
@@ -46,8 +45,9 @@ end
 
 % estimate empirical distributions
 edges = [-inf; sort([data1(:);data2(:)]); inf];
-cdf1 = cumsum(histc(data1, edges) / length(data1));
-cdf2 = cumsum(histc(data2, edges) / length(data2));
+pmf1 = (histc(data1, edges) / length(data1));
+pmf2 = (histc(data2, edges) / length(data2));
 
-div = max(abs(cdf1(:) - cdf2(:)));
+div = sum((pmf1 - pmf2).^2);
+
 % vim:ts=8:sts=4:sw=4

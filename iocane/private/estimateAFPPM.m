@@ -43,7 +43,9 @@ function [afppm] = estimateAFPPM(spikeTrains, kNearest)
 % POSSIBILITY OF SUCH DAMAGE.
 
 afppm.spikeTrains = spikeTrains;
-afppm.duration = spikeTrains.duration;
+if isfield(spikeTrains, 'duration')
+    afppm.duration = spikeTrains.duration;
+end
 afppm.M = cellfun('length', spikeTrains.data);
 afppm.maxM = max(afppm.M);
 afppm.histM = histc(afppm.M, 0:1:afppm.maxM);
@@ -82,6 +84,8 @@ for i = 1:afppm.maxM
     else
 	dkNN = d(:,kNearest+1);
     end
+
+    % TODO: 10 is a magic number here
     afppm.sigmas{i} = (10 / kNearest * sqrt(dkNN)).^(i+1);
 end
 

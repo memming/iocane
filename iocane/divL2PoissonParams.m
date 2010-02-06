@@ -7,7 +7,7 @@ function [params] = divL2PoissonParams(dt, mode, kernelSize)
 % Input:
 %   dt: (1) time bin size for the computation of the difference (around 1e-3)
 %   mode: (string) type of smoothing kernel size selection method
-%         Valid values: fixed, optimal
+%         Valid values: fixed, optimal, hist
 %         Fixed uses the third argument. Optimal doesn't.
 %   kernelSize: (1) fixed kernel size for smoothing
 %
@@ -17,7 +17,7 @@ function [params] = divL2PoissonParams(dt, mode, kernelSize)
 % See also: divL2Poisson, sskernel
 %
 % $Id$
-% Copyright 2009 iocane project. All rights reserved.
+% Copyright 2010 iocane project. All rights reserved.
 
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted provided that the following conditions are met:
@@ -43,19 +43,37 @@ function [params] = divL2PoissonParams(dt, mode, kernelSize)
 % POSSIBILITY OF SUCH DAMAGE.
 
 params.dt = dt;
+params.mode = mode;
 
 switch(lower(mode))
+case {'hist'}
+    %params.kernelSizeHandle = @(x)(kernelSize);
+    params.estimateMarginalIntensity = @(tr,spks)(histc(flattenCell(spks.data),tr));
 case {'optimal', 'sskernel'}
     % requires sskernel from Shimazaki
     requireThirdParty('sskernel');
-    params.kernelSizeHandle = @(x)(sskernel(x));
+    %params.kernelSizeHandle = @(x)(sskernel(x));
+    params.estimateMarginalIntensity = @(tr,spks)(smoothedEstimator(tr,spks,sskernel(spks)));
 case {'fixed'}
     if nargin > 2
 	params.kernelSizeHandle = @(x)(kernelSize);
     else
 	error('kernel size is required');
     end
+    params.estimateMarginalIntensity = @(tr,spks)(smoothedEstimator(tr,spks,kernelSize));
 otherwise
     error('Unknown mode');
+end
+end % end function
+
+function lambda = smoothedEstimator(tr, spikeTrains, sigma)
+    allSpikes = flattenCell(spikeTrains.data);
+    if isempty(allSpikes)
+	lambda = zeros(size(tr));
+	return
+    end
+    %sigma = params.kernelSizeHandle(allSpikes(:));
+    lambda = ksdensity(allSpikes(:), tr, 'width', sigma);
+    lambda = lambda * numel(allSpikes) / spikeTrains.N / spikeTrains.duration;
 end
 % vim:ts=8:sts=4:sw=4

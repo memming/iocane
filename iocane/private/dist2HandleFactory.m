@@ -48,6 +48,6 @@ case {'js', 'jensen-shannon'}
 case {'total variation'}
     dist2Handle = @(p,q)( abs(p - q) );
 otherwise
-    error('Unknown R+ metric');
+    error('Unknown R+ metric [%s]', name);
 end
 % vim:ts=8:sts=4:sw=4

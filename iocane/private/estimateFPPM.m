@@ -45,7 +45,9 @@ function [fppm] = estimateFPPM(spikeTrains, kernelSizeHandle, sigma1)
 fppm.kernelSizeHandle = kernelSizeHandle;
 fppm.sigma1 = sigma1;
 fppm.spikeTrains = spikeTrains;
-fppm.duration = spikeTrains.duration;
+if isfield(spikeTrains, 'duration')
+    fppm.duration = spikeTrains.duration; % We don't really need this
+end
 fppm.M = cellfun('length', spikeTrains.data);
 fppm.maxM = max(fppm.M);
 fppm.histM = histc(fppm.M, 0:1:fppm.maxM);
@@ -54,15 +56,24 @@ fppm.prN = fppm.histM / spikeTrains.N;
 fppm.likelihood = @likelihoodFPPM;
 
 fppm.subSt = cell(fppm.maxM, 1);
-for i = 1:fppm.maxM
-    N = fppm.histM(i+1);
-    subArray = zeros(N, i);
-    kList = find(fppm.M == i);
+for m = 1:fppm.maxM
+    N = fppm.histM(m+1);
+    if N == 0
+        fppm.subSt{m} = [];
+        continue;
+    end
+    %{
+    idx = (fppm.M == m);
+    subArray = cell2mat(spikeTrains.data(idx));
+    subArray = reshape(subArray', N, m);
+    %}
+    subArray = zeros(N, m);
+    kList = find(fppm.M == m);
     for kIdx = 1:length(kList)
 	k = kList(kIdx);
 	subArray(kIdx,:) = spikeTrains.data{k};
     end
-    fppm.subSt{i} = subArray;
+    fppm.subSt{m} = subArray;
 end
 
 % vim:ts=8:sts=4:sw=4

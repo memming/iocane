@@ -1,20 +1,22 @@
-function div = sdivKS(data1, data2, params)
-% Kolmogorov-Smirnov test statistic via empirical cdf estimator
-% div = sdivKS(data1, data2, params)
-%
-% KS statistic ranges from 0 to 1.
-% If any of the data is empty, the divergence is set to 1.
+function [params] = divSPDParams(kernelName, kernelSizeName, sigma);
+% Generates parameters for the SPD-divergence for point processes.
+% [params] = divSPDParams(kernelName, kernelSizeName, sigma);
 % 
 % Input:
-%   data1, data2: (Nx1, Mx1) 2 sets of real values for comparison
-%   params: (struct) not used
+%   kernelName: (string) The kernel type. Must be strictly positive definite
+%	       to be a divergence. If not only partial statistics is used.
+%              Valid values: Guassian, constant
+%   kernelSizeName: (string) The kernel size scaler type.
+%              Default
+%   sigma: (1/optional) the kernel size.
+%              Default value is 5 ms.
 % Output:
-%   div: (1) divergence value
+%   params: (struct) ready to use for divSPD
 %
-% See also: divCountParams, divISIParams, divTTFSParams
+% See also: divSPD
 %
 % $Id$
-% Copyright 2009 iocane project. All rights reserved.
+% Copyright 2010 iocane project. All rights reserved.
 
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted provided that the following conditions are met:
@@ -39,15 +41,22 @@ function div = sdivKS(data1, data2, params)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-if isempty(data1) || isempty(data2)
-    div = 1;
-    return
+if nargin < 3
+    sigma = 5e-3;
 end
 
-% estimate empirical distributions
-edges = [-inf; sort([data1(:);data2(:)]); inf];
-cdf1 = cumsum(histc(data1, edges) / length(data1));
-cdf2 = cumsum(histc(data2, edges) / length(data2));
+if isa(kernelName, 'function_handle')
+    params.kernel = kernelName;
+else
+    switch(lower(kernelName))
+    case {'gaussian'}
+	params.kernel = @(x,y,N)(exp(-sum((x-y).^2)/2/sigma/sqrt(N)));
+	%params.kernel = @(x,y,N)(exp(-sum((x-y).^2)));
+    case {'constant'}
+	params.kernel = @(x,y,N)(1);
+    otherwise
+	error('Unknown kernel name [%s]', kernelName);
+    end
+end
 
-div = max(abs(cdf1(:) - cdf2(:)));
 % vim:ts=8:sts=4:sw=4
