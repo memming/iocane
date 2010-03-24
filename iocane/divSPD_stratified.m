@@ -8,10 +8,7 @@ function [div] = divSPD(spikeTrains1, spikeTrains2, params)
 % Output:
 %   div: (1) divergence value
 %
-% div = \iint K(x,y) d\mu(y) d\mu(y)
-% where \mu = (P-Q)
-%
-% See also: divSPDParams, divSPDParams_fgh, divCount, divL2Poisson
+% See also: divSPDParams, divCount, divL2Poisson
 %
 % Original idea by Memming and Sohan Seth
 %
@@ -41,24 +38,60 @@ function [div] = divSPD(spikeTrains1, spikeTrains2, params)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
+M1 = cellfun('length', spikeTrains1.data);
+M2 = cellfun('length', spikeTrains2.data);
+maxM = max(max(M1),max(M2));
+
+% sigma = 1e-3;
+% kernel = @(x,y,N)(exp(-sum((x-y).^2)/2/sigma/sqrt(N)));
+% kernel = @(x,y,N)(exp(-sum((x-y).^2)));
+% kernel = @(x,y,N)(1);
 kernel = params.kernel;
 
-dxx = 0; dxy = 0; dyy = 0;
-for k1 = 1:spikeTrains1.N
-    for k2 = 1:spikeTrains1.N
-	dxx = dxx + kernel(spikeTrains1, k1, spikeTrains1, k2);
-    end
-end
+% N = 0 case
+k1 = (M1 == 0);
+k2 = (M2 == 0);
 
-for k1 = 1:spikeTrains1.N
-    for k2 = 1:spikeTrains2.N
-	dxy = dxy + kernel(spikeTrains1, k1, spikeTrains2, k2);
-    end
-end
+dxx = sum(k1)^2; % TODO: multiply by K(0)?
+dyy = sum(k2)^2;
+dxy = sum(k1) * sum(k2);
 
-for k1 = 1:spikeTrains2.N
-    for k2 = 1:spikeTrains2.N
-	dyy = dyy + kernel(spikeTrains2, k1, spikeTrains2, k2);
+for N = 1:maxM % for each dimension
+    k1 = (M1 == N); k2 = (M2 == N); % find all the spike trains with N spks
+
+    NX = sum(k1); NY = sum(k2);
+
+    X = spikeTrains1.data(k1);
+    Y = spikeTrains2.data(k2);
+
+    if NX ~= 0
+	tdxx = 0;
+	for k1 = 1:NX
+	    for k2 = (k1+1):NX
+		tdxx = tdxx + kernel(X{k1}, X{k2}, N);
+	    end
+	end
+	dxx = dxx + tdxx * 2 + NX;
+    end
+
+    if NY ~= 0
+	tdyy = 0;
+	for k1 = 1:NY
+	    for k2 = (k1+1):NY
+		tdyy = tdyy + kernel(Y{k1}, Y{k2}, N);
+	    end
+	end
+	dyy = dyy + tdyy * 2 + NY;
+    end
+
+    if NX ~= 0 && NY ~= 0
+	tdxy = 0;
+	for k1 = 1:NX
+	    for k2 = 1:NY
+		tdxy = tdxy + kernel(X{k1}, Y{k2}, N);
+	    end
+	end
+	dxy = dxy + tdxy;
     end
 end
 

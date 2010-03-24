@@ -1,4 +1,4 @@
-function [params] = divSPDParams(f, g, h, dt)
+function [params] = divSPDParams_fgh(f, g, h, dt)
 % Generates parameters for the SPD-divergence for point processes.
 % [params] = divSPDParams_fgh(f, g, h, dt)
 % 
@@ -6,6 +6,7 @@ function [params] = divSPDParams(f, g, h, dt)
 %   f: (function_handle) CAUSAL spike train smoothing kernel
 %   g: (function_handle) translation invariant positive definite function
 %   h: (function_handle) strictly positive weighting function
+%   dt: integration (time) step size
 %
 % Output:
 %   params: (struct) ready to use for divSPD
@@ -53,18 +54,21 @@ end
 
 function [kk] = k(spikeTrains1, k1, spikeTrains2, k2)
     tr = 0:dt:spikeTrains1.duration;
-    x1 = zeros(size(tr)); x2 = zeros(size(tr));
-    st1 = spikeTrains1.data{k1};
-    st2 = spikeTrains2.data{k2};
-    for k = 1:length(st1)
-	tidx = ceil(st1(k)/dt);
-	x1(tidx:end) = x1(tidx:end) + f(tr(tidx:end) - st1(k));
+    nNeuron = size(spikeTrains1.data, 2);
+    kk = 1;
+    for kkk = 1:nNeuron
+	st1 = spikeTrains1.data{k1, kkk}; st2 = spikeTrains2.data{k2, kkk};
+	x1 = zeros(size(tr)); x2 = zeros(size(tr));
+	for k = 1:length(st1)
+	    tidx = ceil(st1(k)/dt);
+	    x1(tidx:end) = x1(tidx:end) + f(tr(tidx:end) - st1(k));
+	end
+	for k = 2:length(st2)
+	    tidx = ceil(st2(k)/dt);
+	    x2(tidx:end) = x2(tidx:end) + f(tr(tidx:end) - st2(k));
+	end
+	kk = kk * (sum(h(tr) .* g(x1 - x2)) * dt);
     end
-    for k = 2:length(st2)
-	tidx = ceil(st2(k)/dt);
-	x2(tidx:end) = x2(tidx:end) + f(tr(tidx:end) - st2(k));
-    end
-    kk = sum(h(tr) .* g(x1 - x2)) * dt;
 end
 
 params.kernel = @k;

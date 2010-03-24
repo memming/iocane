@@ -33,8 +33,10 @@ function [kernelSizeHandle] = kernelSizeScaleFactory(kernelSizeName)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-if nargin > 1
+if nargin > 0
 switch lower(kernelSizeName)
+case {'modsilverman'}
+    kernelSizeHandle = @modifiedSilvermanKernelSizeScaler;
 case {'silverman'}
     kernelSizeHandle = @silvermanKernelSizeScaler;
 case {'default'}
@@ -70,7 +72,7 @@ end
 
 function [sigma] = silvermanKernelSizeScaler(dimension, n, sigma1)
 % [sigma] = silvermanKernelSizeScaler(dimension, n)
-% Uses Silverman's rule 1/N^(-1/(dimension+4))
+% Uses Silverman's rule N^(-1/(dimension+4))
 % Computes the kernel size for target dimension given the number of samples
 % Input:
 %   dimension: (natural number) Demension of the data
@@ -81,6 +83,21 @@ function [sigma] = silvermanKernelSizeScaler(dimension, n, sigma1)
 %   sigma: (double) Kernel size
 
     sigma = sigma1 * n^(-1/(4+dimension));
+end
+
+function [sigma] = modifiedSilvermanKernelSizeScaler(dimension, n, sigma1)
+% [sigma] = modifiedSilvermanKernelSizeScaler(dimension, n)
+% Uses Silverman's rule and factorial vol N^(-1/(dimension+4)) / dimension!
+% Computes the kernel size for target dimension given the number of samples
+% Input:
+%   dimension: (natural number) Demension of the data
+%   n: (natural number) Total number of samples
+% External variable scope:
+%   sigma1: (double) Kernel size for one sample in one dimension
+% Output:
+%   sigma: (double) Kernel size
+
+    sigma = sigma1 * n^(-1/(4+dimension)) / factorial(dimension);
 end
 
 % vim:ts=8:sts=4:sw=4

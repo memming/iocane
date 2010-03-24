@@ -1,17 +1,17 @@
-function [params] = divSPDParams(f, g, h, dt)
+function [params] = divSPDParams(kernelName, kernelSizeName, sigma);
 % Generates parameters for the SPD-divergence for point processes.
-% [params] = divSPDParams_fgh(f, g, h, dt)
+% [params] = divSPDParams(kernelName, kernelSizeName, sigma);
 % 
 % Input:
-%   f: (function_handle) CAUSAL spike train smoothing kernel
-%   g: (function_handle) translation invariant positive definite function
-%   h: (function_handle) strictly positive weighting function
-%
+%   kernelName: (string) The kernel type. Must be strictly positive definite
+%	       to be a divergence. If not only partial statistics is used.
+%              Valid values: Guassian, constant
+%   kernelSizeName: (string) The kernel size scaler type.
+%              Default
+%   sigma: (1/optional) the kernel size.
+%              Default value is 5 ms.
 % Output:
 %   params: (struct) ready to use for divSPD
-%
-% WARNING: This is for prototyping. The SPD kernel provided in this setting
-%          is EXTREMELY slow.
 %
 % See also: divSPD
 %
@@ -41,34 +41,22 @@ function [params] = divSPDParams(f, g, h, dt)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-%params.kernel = @(s1,k1,s2,k2)(k(s1,k1,s2,k2,dt));
-
-if ~isa(f, 'function_handle') || ~isa(g, 'function_handle') || ~isa(h, 'function_handle')
-    error('f,g,h has to be a function');
+if nargin < 3
+    sigma = 5e-3;
 end
 
-if ~isnumeric(dt) || (dt <= 0)
-    error('dt has to be a positive real number');
-end
-
-function [kk] = k(spikeTrains1, k1, spikeTrains2, k2)
-    tr = 0:dt:spikeTrains1.duration;
-    x1 = zeros(size(tr)); x2 = zeros(size(tr));
-    st1 = spikeTrains1.data{k1};
-    st2 = spikeTrains2.data{k2};
-    for k = 1:length(st1)
-	tidx = ceil(st1(k)/dt);
-	x1(tidx:end) = x1(tidx:end) + f(tr(tidx:end) - st1(k));
+if isa(kernelName, 'function_handle')
+    params.kernel = kernelName;
+else
+    switch(lower(kernelName))
+    case {'gaussian'}
+	params.kernel = @(x,y,N)(exp(-sum((x-y).^2)/2/sigma/sqrt(N)));
+	%params.kernel = @(x,y,N)(exp(-sum((x-y).^2)));
+    case {'constant'}
+	params.kernel = @(x,y,N)(1);
+    otherwise
+	error('Unknown kernel name [%s]', kernelName);
     end
-    for k = 2:length(st2)
-	tidx = ceil(st2(k)/dt);
-	x2(tidx:end) = x2(tidx:end) + f(tr(tidx:end) - st2(k));
-    end
-    kk = sum(h(tr) .* g(x1 - x2)) * dt;
-end
-
-params.kernel = @k;
-
 end
 
 % vim:ts=8:sts=4:sw=4
