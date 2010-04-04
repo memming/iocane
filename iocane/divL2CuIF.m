@@ -1,12 +1,17 @@
-function spikeTrains = genTwoAPex(N, M, param)
-% TODO: description
-% generate two point processes with less than two APs
-% PP1. ISI maintained (t1, t1+alpha), t1 ~ unif(0.5,1)
-% PP2. (t1, t2), t1 ~ unif(0.5,1), t2 ~ unif(0.5, 1) + alpha
-% Both t1 and t2 can be lost with probability p
+function [div] = divL2CuIF(spikeTrains1, spikeTrains2, params)
+% L2 distance of (marginal) cumulative intensity functions
+% [div] = divL2CuIF(spikeTrains1, spikeTrains2, params)
+% 
+% Input:
+%   spikeTrains1, spikeTrains2: (struct) 2 sets of spike trains for comparison
+%   params: not used
+% Output:
+%   div: (1) divergence value
+%
+% This is only a dissimilarity and not a divergence.
 %
 % $Id$
-% Copyright 2009 Memming. All rights reserved.
+% Copyright 2010 iocane project. All rights reserved.
 
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted provided that the following conditions are met:
@@ -31,41 +36,27 @@ function spikeTrains = genTwoAPex(N, M, param)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-switch(lower(param.type))
-case {'correlated'}
-    isCorrelated = 1;
-case {'uncorrelated', 'ptst'}
-    isCorrelated = 0;
-otherwise
-    error('Unknown type: use either correlated or renewal');
+M1 = sum(cellfun('length', spikeTrains1.data))+1;
+M2 = sum(cellfun('length', spikeTrains2.data))+1;
+st = zeros(M1+M2, 1);
+last = 2;
+for k = 1:spikeTrains1.N
+    s = spikeTrains1.data{k};
+    l = length(s);
+    st(last:last+l-1) = s;
+    last = last + l;
+end
+last = last + 1;
+for k = 1:spikeTrains2.N
+    s = spikeTrains2.data{k};
+    l = length(s);
+    st(last:last+l-1) = s;
+    last = last + l;
 end
 
-alpha = 0.3;
-tWidth = 0.1;
-tOffset = 0.2;
-jitterSigma = 0.01;
-duration = 2 * tOffset + tWidth + alpha;
-p = 0.1;
-
-lossyAPs = @(st,p)(st(rand(size(st)) >= p));
-
-for kM = 1:M
-    spikeTrains(kM).N = N;
-    spikeTrains(kM).duration = duration;
-    spikeTrains(kM).source = '$Id$';
-    spikeTrains(kM).data = cell(N, 1);
-    spikeTrains(kM).samplingRate = Inf;
-
-    for k = 1:N
-	t1a = rand(N, 1) * tWidth + tOffset;
-	if ~isCorrelated
-	    t1b = rand(N, 1) * tWidth + tOffset;
-	    t2b = rand(N, 1) * tWidth + tOffset + alpha + randn(N, 1) * jitterSigma;
-	    spikeTrains(kM).data{k} = lossyAPs([t1b(k); t2b(k)], p);
-	else
-	    t2a = t1a + alpha + randn(N, 1) * jitterSigma;
-	    spikeTrains(kM).data{k} = lossyAPs([t1a(k); t2a(k)], p);
-	end
-    end
-end
-% vim:ts=8:sts=4:sw=4
+[z, cls] = sort(st);
+zz = ones(size(z)) / spikeTrains1.N;
+zz(cls > M1) = -1 / spikeTrains2.N;
+zz = cumsum(zz);
+zz = zz .^2;
+div = sum(diff([z; spikeTrains1.duration]) .* zz);

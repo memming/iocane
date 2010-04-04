@@ -8,8 +8,10 @@ function [div] = divL2Poisson(spikeTrains1, spikeTrains2, params)
 % Output:
 %   div: (1) divergence value
 %
-% REQUIRES: stat toolbox (ksdensity)
+% REQUIRES: stat toolbox (ksdensity) - not any more (see divL2PoissonParams)
 % See also: divL2PoissonParams
+%
+% This is only a dissimilarity and not a divergence.
 %
 % $Id$
 % Copyright 2009 iocane project. All rights reserved.

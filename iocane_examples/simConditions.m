@@ -72,6 +72,24 @@ for k = 1:size(divMeasures, 1)
     simCond{k+1}.divParams = divMeasures{k,2};
 end
 
+% 13 to 23
+for k = 2:(size(divMeasures, 1)+1)
+    simCond{k+11} = simCond{k+1};
+    simCond{k+11}.dataHandle1 = @genHomogeneousPoisson;
+    simCond{k+11}.dataHandleParams1 = struct('lambda', 3, 'tOffset', 25e-3, 'duration', 50e-3);
+    simCond{k+11}.dataHandle2 = @genHomogeneousPoisson;
+    simCond{k+11}.dataHandleParams2 = struct('lambda', 1.8, 'tOffset', 25e-3, 'duration', 50e-3);
+end
+
+% 24 to 34
+for k = 2:(size(divMeasures, 1)+1)
+    simCond{k+22} = simCond{k+1};
+    simCond{k+22}.dataHandle1 = @genTwoAPex;
+    simCond{k+22}.dataHandleParams1 = struct('type', 'correlated');
+    simCond{k+22}.dataHandle2 = @genTwoAPex;
+    simCond{k+22}.dataHandleParams2 = struct('type', 'uncorrelated');
+end
+
 %{
 simCond{2}.dataHandle2 = @genHomogeneousPoisson;
 simCond{2}.dataHandleParams2 = struct('lambda', 1.8, 'tOffset', 25e-3, 'duration', 50e-3);

@@ -52,13 +52,15 @@ for nIdx = 1:length(simCond.nRange)
 	spikeTrains2(m).data = spikeTrains2all(m).data(1:n);
     end
 
-    empDist1{nIdx} = empDivDist(spikeTrains1, divHandle, divParams);
-    empDist2{nIdx} = empDivDist(spikeTrains2, divHandle, divParams);
+    empDist1 = empDivDist(spikeTrains1, divHandle, divParams);
+    empDistUnsorted1{nIdx} = empDist1.unsorted;
+    empDist2 = empDivDist(spikeTrains2, divHandle, divParams);
+    empDistUnsorted2{nIdx} = empDist2.unsorted;
 
     for m = 1:simCond.M
 	d2(nIdx,m) = divHandle(spikeTrains1(m), spikeTrains2(m), divParams);
-	p1(nIdx,m) = empDist1{nIdx}.pValue(d2(nIdx,m));
-	p2(nIdx,m) = empDist2{nIdx}.pValue(d2(nIdx,m));
+	p1(nIdx,m) = empDist1.pValue(d2(nIdx,m));
+	p2(nIdx,m) = empDist2.pValue(d2(nIdx,m));
     end
     power1(nIdx) = sum(p1(nIdx,:) < simCond.alpha) / size(p1, 2);
     power2(nIdx) = sum(p2(nIdx,:) < simCond.alpha) / size(p2, 2);
@@ -66,6 +68,6 @@ end
 
 tictoc = toc;
 
-save(sprintf('simResults/sim%03d', simIdx), 'power1', 'power2', 'empDist1', 'empDist2', 'd2', 'tictoc');
+save(sprintf('simResults/sim%03d', simIdx), 'power1', 'power2', 'empDistUnsorted1', 'empDistUnsorted2', 'd2', 'tictoc');
 fprintf('Simulation for [%d] done in [%.2f min]\r', simIdx, tictoc/60);
 % vim:ts=8:sts=4:sw=4

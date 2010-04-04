@@ -1,4 +1,4 @@
-function [divDist] = empDivDist(spikeTrainsArr, divHandle, divParams, indexIterator)
+function [divDist] = empDivDist(spikeTrainsArr, divHandle, divParams, indexIterator, verbose)
 % Computes the empirical distribution from data collected under a hypothesis
 % divDist = empDivDist(spikeTrainsArr, divHandle, divParams, indexIterator)
 %
@@ -19,6 +19,7 @@ function [divDist] = empDivDist(spikeTrainsArr, divHandle, divParams, indexItera
 %                  maintaining the hypothesis. Given the last indices,
 %                  the next indices should be returned. Loop starts with (1,1)
 %                  Default computes all possible pairwise interactions.
+%   verbose: (default: true) print calculation time estimates
 % Output:
 %   divDist: (struct) empirical computation results and related function handles
 %
@@ -51,7 +52,8 @@ function [divDist] = empDivDist(spikeTrainsArr, divHandle, divParams, indexItera
 % POSSIBILITY OF SUCH DAMAGE.
 
 M = length(spikeTrainsArr);
-d_pairwise = zeros(M * (M - 1) / 2, 1);
+nSurro = M * (M - 1) / 2;
+d_pairwise = zeros(nSurro, 1);
 
 if nargin > 4
     next = indexIterator;
@@ -59,14 +61,27 @@ else
     next = @defaultNext;
 end
 
+if nargin < 5
+    verbose = true;
+end
+
 k = 1; k1 = 1; k2 = 1;
+tt = 0;
 while true
+    if verbose; t = tic; end
     [k1, k2] = next(k1, k2);
     if k1 < 0
 	break;
     end
 
-    d_pairwise(k) = divHandle(spikeTrainsArr(k1), spikeTrainsArr(k2), divParams);
+    d_pairwise(k) = divHandle(spikeTrainsArr(k1), spikeTrainsArr(k2),divParams);
+    if verbose; tt = tt + toc(t);
+	waitMins = (tt / k) * (nSurro-k) / 60;
+	if waitMins > 1
+	    fprintf('Estimated time remaining (surrogate): %f mins [%d]\r', ...
+		waitMins, k);
+	end
+    end
     k = k + 1;
 end
 

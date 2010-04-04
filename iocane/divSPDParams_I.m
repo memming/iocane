@@ -1,12 +1,18 @@
-function spikeTrains = genTwoAPex(N, M, param)
-% TODO: description
-% generate two point processes with less than two APs
-% PP1. ISI maintained (t1, t1+alpha), t1 ~ unif(0.5,1)
-% PP2. (t1, t2), t1 ~ unif(0.5,1), t2 ~ unif(0.5, 1) + alpha
-% Both t1 and t2 can be lost with probability p
+function [params] = divSPDParams_I(kappa, sigma)
+% Kernel using L2 distance between realizations of counting processes
+% [params] = divSPDParams_I
+% 
+% Input:
+%   kappa: (string) kappa type - identity, exp_int, or int_exp
+%   sigma: (1) kernel size for kappa
+%
+% Output:
+%   params: (struct) ready to use for divSPD
+%
+% See also: divSPD
 %
 % $Id$
-% Copyright 2009 Memming. All rights reserved.
+% Copyright 2010 iocane project. All rights reserved.
 
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted provided that the following conditions are met:
@@ -31,41 +37,45 @@ function spikeTrains = genTwoAPex(N, M, param)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-switch(lower(param.type))
-case {'correlated'}
-    isCorrelated = 1;
-case {'uncorrelated', 'ptst'}
-    isCorrelated = 0;
-otherwise
-    error('Unknown type: use either correlated or renewal');
+% if nargin > 0
+%     error('f has to be a function');
+% end
+
+if nargin < 2
+    sigma = 2;
 end
 
-alpha = 0.3;
-tWidth = 0.1;
-tOffset = 0.2;
-jitterSigma = 0.01;
-duration = 2 * tOffset + tWidth + alpha;
-p = 0.1;
-
-lossyAPs = @(st,p)(st(rand(size(st)) >= p));
-
-for kM = 1:M
-    spikeTrains(kM).N = N;
-    spikeTrains(kM).duration = duration;
-    spikeTrains(kM).source = '$Id$';
-    spikeTrains(kM).data = cell(N, 1);
-    spikeTrains(kM).samplingRate = Inf;
-
-    for k = 1:N
-	t1a = rand(N, 1) * tWidth + tOffset;
-	if ~isCorrelated
-	    t1b = rand(N, 1) * tWidth + tOffset;
-	    t2b = rand(N, 1) * tWidth + tOffset + alpha + randn(N, 1) * jitterSigma;
-	    spikeTrains(kM).data{k} = lossyAPs([t1b(k); t2b(k)], p);
-	else
-	    t2a = t1a + alpha + randn(N, 1) * jitterSigma;
-	    spikeTrains(kM).data{k} = lossyAPs([t1a(k); t2a(k)], p);
-	end
+function [kk] = k(spikeTrains1, k1, spikeTrains2, k2)
+    st1 = spikeTrains1.data{k1};
+    l1 = length(st1) + 1; % empty spike train
+    st2 = spikeTrains2.data{k2};
+    [z, cls] = sort([st1(:); 0; st2(:); 0]);
+    %
+    zz = ones(size(z));
+    zz(cls > l1) = -1;
+    zz = cumsum(zz);
+    % alternatively
+    % z1 = cumsum(cls <= l1);
+    % z2 = cumsum(cls > l1);
+    % zz = (z1 - z2);
+    zz = zz .^2;
+    switch(kappa)
+    case {'identity'}
+	kk = sum(diff([z; spikeTrains1.duration]) .* zz);
+    case {'exp_int'}
+	kk = exp(-sum(diff([z; spikeTrains1.duration]) .* zz)/sigma);
+    case {'int_exp'}
+	zz = exp(-zz/sigma);
+	kk = sum(diff([z; spikeTrains1.duration]) .* zz);
+    otherwise
+	error('invalid kernel!');
     end
 end
+
+params.kernel = @k;
+params.kappa = kappa;
+params.sigma = sigma;
+
+end
+
 % vim:ts=8:sts=4:sw=4
