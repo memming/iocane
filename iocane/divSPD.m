@@ -42,6 +42,7 @@ function [div] = divSPD(spikeTrains1, spikeTrains2, params)
 % POSSIBILITY OF SUCH DAMAGE.
 
 kernel = params.kernel;
+% NOTE: Not all kernels are symmetric.
 
 dxx = 0; dxy = 0; dyy = 0;
 for k1 = 1:spikeTrains1.N

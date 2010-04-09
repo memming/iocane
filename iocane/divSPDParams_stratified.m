@@ -1,6 +1,6 @@
-function [params] = divSPDParams(kernelName, kernelSizeName, sigma);
+function [params] = divSPDParams_stratified(kernelName, kernelSizeName, sigma);
 % Generates parameters for the SPD-divergence for point processes.
-% [params] = divSPDParams(kernelName, kernelSizeName, sigma);
+% [params] = divSPDParams_stratified(kernelName, kernelSizeName, sigma);
 % 
 % Input:
 %   kernelName: (string) The kernel type. Must be strictly positive definite
@@ -13,7 +13,7 @@ function [params] = divSPDParams(kernelName, kernelSizeName, sigma);
 % Output:
 %   params: (struct) ready to use for divSPD
 %
-% See also: divSPD
+% See also: divSPD_stratified
 %
 % $Id$
 % Copyright 2010 iocane project. All rights reserved.
