@@ -44,6 +44,7 @@ function [params] = divSPDParams_stratified(kernelName, kernelSizeName, sigma);
 if nargin < 3
     sigma = 5e-3;
 end
+params.sigma = sigma;
 
 if isa(kernelName, 'function_handle')
     params.kernel = kernelName;

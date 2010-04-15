@@ -75,5 +75,13 @@ for kM = 1:M
     end
 end
 
-evaluateExperiment(spikeTrains1, spikeTrains2, M);
+divMeasures = {...
+    @divSPD, []; ...
+    %@divISF, []; ...
+    %@divCDF, divCDFParams(2, 'sum'); ...
+};
+
+%[p, power, dist, d12] = evaluateExperiment(spikeTrains1, spikeTrains2, M, 0.05, true, divMeasures);
+
+[p, power, dist, d12] = evaluateExperiment(spikeTrains1, spikeTrains2, M);
 % vim:ts=8:sts=4:sw=4

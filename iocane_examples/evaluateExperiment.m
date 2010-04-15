@@ -102,12 +102,17 @@ end
 
 if verbose; fprintf('Statistical power with alpha = %f\n', alpha); end
 fid = fopen(['eval_' datestr(now,30) '.log'], 'w');
+fprintf(fid, '%s\r\n', mfilename);
+fprintf(fid, '$Id$\r\n');
+fprintf(fid, '%s, %s, %d, %f\n', spikeTrains1.source, spikeTrains2.source, M, alpha);
+dbs = dbstack;
+for k = 1:length(dbs); fprintf(fid, '%s\r\n', dbs(k).file); end
 for k = 1:size(divMeasures, 1)
     power(k) = sum(p(k,:) < alpha) / size(p, 2);
     if verbose
 	fprintf('%f - \t %s %s\n', power(k), func2str(divMeasures{k,1}), dparams2str(divMeasures{k,2}));
     end
-    fprintf(fid, '%f - \t %s %s\n', power(k), func2str(divMeasures{k,1}), dparams2str(divMeasures{k,2}));
+    fprintf(fid, '%f - \t %s %s\r\n', power(k), func2str(divMeasures{k,1}), dparams2str(divMeasures{k,2}));
 end
 fclose(fid);
 

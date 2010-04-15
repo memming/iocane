@@ -31,7 +31,8 @@ rand('seed', 20091026);
 randn('seed', 20091026);
 
 N = 40; % Number of realizations
-M = 46; % Number of point processes per class
+%M = 46; % Number of point processes per class
+M = 13; % Number of point processes per class
 
 L = 4; % Number of precisely timed action potentials (or bumps in Poisson case)
 T = 1; % total duration
@@ -74,5 +75,18 @@ for kM = 1:M
     end
 end
 
-evaluateExperiment(spikeTrains1, spikeTrains2, M);
+divMeasures = {...
+    @divL2CuIF, []; ...
+    %@divSPD, []; ...
+    %@divSPD, divSPDParams_I('int_exp'); ...
+    %@divSPD, divSPDParams_I('exp_int'); ...
+    %@divCDF, divCDFParams(Inf, 'sum'); ...
+    %@divCDF, divCDFParams(2, 'sum'); ...
+    %@divCDF, divCDFParams(Inf, 'sup'); ...
+%    @divISF, []; ...
+};
+
+[p, power, dist, d12] = evaluateExperiment(spikeTrains1, spikeTrains2, M, 0.05, true, divMeasures);
+
+%[p, power, dist, d12] = evaluateExperiment(spikeTrains1, spikeTrains2, M);
 % vim:ts=8:sts=4:sw=4

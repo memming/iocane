@@ -1,15 +1,20 @@
-function [params] = divSPDParams_I(kappa, sigma)
-% Kernel using L2 distance between realizations of counting processes
-% [params] = divSPDParams_I
-% 
+function [dep,Kxx,Kyy] = depSPD(spikeTrains1, spikeTrains2, params)
+% Dependence using strictly positive definite kernels
+% [dep] = depSPD(spikeTrains1, spikeTrains2, params)
+%
 % Input:
-%   kappa: (string) kappa type - identity, exp_int, or int_exp
-%   sigma: (1) kernel size for kappa
-%
+%   spikeTrains1, spikeTrains2: (struct) sets of spike trains for comparison
+%                               equal length, same index -> joint trial
+%   params: (struct) see divSPDParams
 % Output:
-%   params: (struct) ready to use for divSPD
+%   dep: (1) dependence value
 %
-% See also: divSPD
+% div = \iint K(x,y) d\mu(y) d\mu(y)
+% where \mu = (P-Q)
+%
+% See also: divSPDParams, divSPDParams_fgh, divCount, divL2Poisson
+%
+% Original idea by Memming and Sohan Seth
 %
 % $Id$
 % Copyright 2010 iocane project. All rights reserved.
@@ -37,48 +42,22 @@ function [params] = divSPDParams_I(kappa, sigma)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-% if nargin > 0
-%     error('f has to be a function');
-% end
+kernel = params.kernel;
+% NOTE: Not all kernels are symmetric.
 
-if nargin < 2
-    sigma = 2;
-end
-
-function [kk] = k(spikeTrains1, k1, spikeTrains2, k2)
-    st1 = spikeTrains1.data{k1};
-    l1 = length(st1) + 1; % empty spike train
-    st2 = spikeTrains2.data{k2};
-    [z, cls] = sort([st1(:); 0; st2(:); 0]);
-    if z(end) > spikeTrains1.duration
-	error('There are more spikes after the end?');
-    end
-    %
-    zz = ones(size(z));
-    zz(cls > l1) = -1;
-    zz = cumsum(zz);
-    % alternatively
-    % z1 = cumsum(cls <= l1);
-    % z2 = cumsum(cls > l1);
-    % zz = (z1 - z2);
-    zz = zz .^2;
-    switch(kappa)
-    case {'identity'}
-	kk = sum(diff([z; spikeTrains1.duration]) .* zz);
-    case {'exp_int'}
-	kk = exp(-sum(diff([z; spikeTrains1.duration]) .* zz)/sigma);
-    case {'int_exp'}
-	zz = exp(-zz/sigma);
-	kk = sum(diff([z; spikeTrains1.duration]) .* zz);
-    otherwise
-	error('invalid kernel!');
+N = spikeTrains1.N;
+Kxx = zeros(N, N); Kyy = zeros(N, N);
+for k1 = 1:N
+    for k2 = k1:N
+	Kxx(k1,k2) = kernel(spikeTrains1, k1, spikeTrains1, k2);
+	Kxx(k2,k1) = Kxx(k1,k2);
+	Kyy(k1,k2) = kernel(spikeTrains2, k1, spikeTrains2, k2);
+	Kyy(k2,k1) = Kyy(k1,k2);
     end
 end
 
-params.kernel = @k;
-params.kappa = kappa;
-params.sigma = sigma;
+d1 = sum(sum(Kxx .* Kyy))/N^2;
+d2 = 2 * sum(Kxx) * sum(Kyy,2)/N^3;
+d3 = sum(sum(Kxx))*sum(sum(Kyy))/N^4;
 
-end
-
-% vim:ts=8:sts=4:sw=4
+dep = d1 - d2 + d3;
