@@ -58,7 +58,7 @@ d_pairwise = zeros(nSurro, 1);
 if nargin > 4
     if isa(indexIterator, 'function_handle')
 	next = indexIterator;
-    else if isempty(indexIterator)
+    elseif isempty(indexIterator)
 	next = @defaultNext; % use default
     else
 	error('indexIterator must be a function handle or []');

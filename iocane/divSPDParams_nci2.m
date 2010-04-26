@@ -64,35 +64,27 @@ otherwise
 end
 
 function [V] = kernel(spikeTrains1, k1, spikeTrains2, k2)
-	st1 = spikeTrains1.data{k1}; st2 = spikeTrains2.data{k2};
-	st1 = st1(:)'; st2 = st2(:)';
-	T = max(spikeTrains1.duration, spikeTrains2.duration);
-	L1 = length(st1); L2 = length(st2);
-	V = 0;
-	if length(st1) == 0 || length(st2) == 0
-		return;
-	end
+    st1 = spikeTrains1.data{k1}; st2 = spikeTrains2.data{k2};
+    st1 = st1(:)'; st2 = st2(:)';
+    T = max(spikeTrains1.duration, spikeTrains2.duration);
+    L1 = length(st1); L2 = length(st2);
+    V = 0;
+    if L1 == 0 || L2 == 0
+	return;
+    end
 
-	% auxiliary sets
-	% times: when the difference between intensity functions changes
-	[times idx] = sort([st1-pwidth/2, st1+pwidth/2, ...
-						st2-pwidth/2, st2+pwidth/2]);
-	% if the difference should increase or decrease
-	incr = [ones(1,L1), -ones(1,L1), -ones(1,L2), ones(1,L2)];
-	incr = incr(idx);
-
-	% evaluate inner prod
-	k = 2 * (L1 + L2);
-	n = min(find(times > 0));
-	val = sum(incr(1:(n-1)));
-	t0 = 0;
-	while (n <= k) && (times(n) < T)
-		V = V + (times(n)-t0) * K(val/pwidth);
-		t0 = times(n);
-		val = val + incr(n);
-		n = n + 1;
-	end
-	V = V + (T-t0) * K(val/pwidth);
+    % times: when the difference between intensity functions changes
+    [times idx] = sort([0, st1-pwidth/2, st1+pwidth/2, ...
+					    st2-pwidth/2, st2+pwidth/2]);
+    % if the difference should increase or decrease
+    incr = [0, ones(1,L1), -ones(1,L1), -ones(1,L2), ones(1,L2)];
+    incr = incr(idx);
+    val = cumsum(incr) / pwidth;
+    times(times < 0) = 0;
+    times(times > T) = T;
+    dtimes = diff([times T]);
+    nzidx = (dtimes ~= 0);
+    V = sum(dtimes(nzidx) .* K(val(nzidx)));
 end
 
 params.kernel = @kernel;
