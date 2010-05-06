@@ -83,7 +83,7 @@ while true
     d_pairwise(k) = divHandle(spikeTrainsArr(k1), spikeTrainsArr(k2),divParams);
     if verbose; tt = tt + toc(t);
 	waitMins = (tt / k) * (nSurro-k) / 60;
-	if waitMins > 1
+	if waitMins > 1 && mod(k, 100) == 1
 	    fprintf('Estimated time remaining (surrogate): %f mins [%d]\r', ...
 		waitMins, k);
 	end

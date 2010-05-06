@@ -1,17 +1,26 @@
-function spikeTrains = genHomogeneousPoisson(N, M, param)
-% Generate homogeneous Poisson process for testing
-% spikeTrains = genHomogeneousPoisson(N, M, param)
+function [div] = divRatioChiSquare(spikeTrains1, spikeTrains2, params)
+% Kernel estimation of the Radon-Nikodym derviative in Chi-square divergence
+% [div] = divRatioChiSquare(spikeTrains1, spikeTrains2, params)
+% The Radon-Nikodym derivative is estimated using regularized kernel least
+% squares using the given kernel.
 %
-% Input
-%   N: trials per spikeTrains
-%   M: number of sets of trials
-%   param.lambda: mean number of total action potentials
-%	(irrespective of duration)
-%   param.tOffset: offset at the beginning
-%   param.duration: duration of spiking
+% Input:
+%   spikeTrains1, spikeTrains2: (struct) sets of spike trains for comparison
+%   params: (struct) see divSPDParams
+% Output:
+%   div: (1) divergence value
+%
+% g = argmin_f \int (dP/dQ - f)^2 dQ
+% div = \int (g - 1)^2 dQ
+%
+% See also: 
+%
+% Original idea by Sohan Seth
+% Caution: We haven't showed which SPD kernels are universal. Only universal
+%    kernels are guarantteed to work in this approach.
 %
 % $Id$
-% Copyright 2009 Memming. All rights reserved.
+% Copyright 2010 iocane project. All rights reserved.
 
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted provided that the following conditions are met:
@@ -36,23 +45,24 @@ function spikeTrains = genHomogeneousPoisson(N, M, param)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-lambda = param.lambda;
-tOffset = param.tOffset;
-duration = param.duration;
+lambdaXX = 1 / (spikeTrains1.N);
+lambdaYY = 1 / (spikeTrains2.N);
 
-spikeTrainsTemplate.N = N;
-spikeTrainsTemplate.duration = 2 * tOffset + duration;
-spikeTrainsTemplate.source = '$Id$';
-spikeTrainsTemplate.data = cell(N, 1);
-spikeTrainsTemplate.samplingRate = Inf;
+kernel = params.kernel;
 
-for kM = 1:M
-    spikeTrains(kM) = spikeTrainsTemplate;
-
-    for k = 1:N
-	spikeTrains(kM).data{k} = ...
-	    tOffset + sort(rand(poissrnd(lambda), 1)) * duration;
-    end
+if spikeTrains1.N == 0 || spikeTrains2.N == 0
+    div = 0;
+    return
 end
 
-% vim:ts=8:sts=4:sw=4
+[Kxx, Kxy, Kyy] = kernel(spikeTrains1, 1:spikeTrains1.N, spikeTrains2, 1:spikeTrains2.N);
+
+alphaXX = (Kxx * Kxx + lambdaXX * eye(size(Kxx))) ...
+    \ (Kxy * ones(spikeTrains1.N, 1));
+divXX = mean((Kxx * alphaXX - 1).^2);
+
+alphaYY = (Kyy * Kyy + lambdaYY * eye(size(Kyy))) ...
+    \ (Kxy' * ones(spikeTrains2.N, 1));
+divYY = mean((Kyy * alphaYY - 1).^2);
+
+div = (divXX + divYY) / 2;

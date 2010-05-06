@@ -1,5 +1,14 @@
 function spikeTrains = genSerialCorr(N, M, param)
-% TODO: description
+% Renewal process and a serially correlated process with same ISI.
+% spikeTrains = genSerialCorr(N, M, param)
+%
+% Input
+%   N: trials per spikeTrains
+%   M: number of sets of trials
+%   param.T: length of the spike train
+%   param.mISI: mean ISI
+%   param.urISI: half width of uniform distribution for the ISI.
+%   param.type: 'PTST' or 'equPoisson' (equi-rate Poisson process)
 %
 % $Id$
 % Copyright 2009 Memming. All rights reserved.
@@ -34,12 +43,12 @@ type = param.type;
 
 mISI = mISI - urISI;
 
-spikeTrains.N = N;
-spikeTrains.duration = T;
-spikeTrains.source = [type ' - $Id$'];
-spikeTrains.subtype = type;
-spikeTrains.data = cell(N, 1);
-spikeTrains.samplingRate = Inf;
+spikeTrainsTemplate.N = N;
+spikeTrainsTemplate.duration = T;
+spikeTrainsTemplate.source = [type ' - $Id$'];
+spikeTrainsTemplate.subtype = type;
+spikeTrainsTemplate.data = cell(N, 1);
+spikeTrainsTemplate.samplingRate = Inf;
 
 switch(lower(type))
 case {'correlated', 'serial correlation'}
@@ -51,6 +60,7 @@ otherwise
 end
 
 for kM = 1:M
+    spikeTrains(kM) = spikeTrainsTemplate;
     for k = 1:N
 	st = [0];
 	if ~isCorrelated
@@ -71,4 +81,5 @@ for kM = 1:M
 	spikeTrains(kM).data{k} = st;
     end
 end
+
 % vim:ts=8:sts=4:sw=4

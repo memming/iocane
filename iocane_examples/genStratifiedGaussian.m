@@ -1,19 +1,18 @@
-function spikeTrains = genTwoAPex(N, M, param)
-% Generate two point processes with less than two APs
-% spikeTrains = genTwoAPex(N, M, param)
+function spikeTrains = genStratifiedGaussian(N, M, param)
+% Generate point process for a given stratified specification
+% spikeTrains = genStratifiedGaussian(N, M, param)
+% The joint distributions are restricted to be multi-variate Gaussian
 %
 % Input
 %   N: trials per spikeTrains
 %   M: number of sets of trials
-%   param.jitter: standard deviation of spike timing jitter
-%   param.type: 'correlated' or 'uncorrelated'
-%
-% PP1. ISI maintained (t1, t1+alpha), t1 ~ unif(0.5,1)
-% PP2. (t1, t2), t1 ~ unif(0.5,1), t2 ~ unif(0.5, 1) + alpha
-% Both t1 and t2 can be lost with probability p
+%   param.D: maximum dimension
+%   param.T: length of the spike train
+%   param.mean: {Dx1} cell each containing d dimensional vector of means
+%   param.sigma: {Dx1} cell each containing dxd covaraince matirx
 %
 % $Id$
-% Copyright 2009 Memming. All rights reserved.
+% Copyright 2010 Memming. All rights reserved.
 
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted provided that the following conditions are met:
@@ -38,41 +37,22 @@ function spikeTrains = genTwoAPex(N, M, param)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-switch(lower(param.type))
-case {'correlated'}
-    isCorrelated = 1;
-case {'uncorrelated', 'ptst'}
-    isCorrelated = 0;
-otherwise
-    error('Unknown type: use either correlated or renewal');
-end
+D = param.D;
+cumP = cumsum(param.p);
+T = param.T;
 
-alpha = 0.3;
-tWidth = 0.1;
-tOffset = 0.2;
-jitterSigma = param.jitter; % jitterSigma = 0.01;
-duration = 2 * tOffset + tWidth + alpha;
-p = 0.1;
-
-lossyAPs = @(st,p)(st(rand(size(st)) >= p));
+spikeTrainsTemplate.N = N;
+spikeTrainsTemplate.duration = T;
+spikeTrainsTemplate.source = '$Id$';
+spikeTrainsTemplate.data = cell(N, 1);
+spikeTrainsTemplate.samplingRate = Inf;
 
 for kM = 1:M
-    spikeTrains(kM).N = N;
-    spikeTrains(kM).duration = duration;
-    spikeTrains(kM).source = '$Id$';
-    spikeTrains(kM).data = cell(N, 1);
-    spikeTrains(kM).samplingRate = Inf;
-
-    for k = 1:N
-	t1a = rand(N, 1) * tWidth + tOffset;
-	if ~isCorrelated
-	    t1b = rand(N, 1) * tWidth + tOffset;
-	    t2b = rand(N, 1) * tWidth + tOffset + alpha + randn(N, 1) * jitterSigma;
-	    spikeTrains(kM).data{k} = lossyAPs([t1b(k); t2b(k)], p);
-	else
-	    t2a = t1a + alpha + randn(N, 1) * jitterSigma;
-	    spikeTrains(kM).data{k} = lossyAPs([t1a(k); t2a(k)], p);
-	end
+    spikeTrains(kM) = spikeTrainsTemplate;
+    for n = 1:N
+	d = find(rand < cumP, 1, 'first');
+	st = mvnrnd(param.mu{d}, param.sigma{d});
+	spikeTrains(kM).data{n} = sort(st);
     end
 end
 

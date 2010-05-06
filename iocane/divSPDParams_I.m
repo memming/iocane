@@ -4,7 +4,8 @@ function [params] = divSPDParams_I(kappa, sigma)
 % 
 % Input:
 %   kappa: (string) kappa type - identity, exp_int, or int_exp
-%   sigma: (1) kernel size for kappa
+%   sigma: (1) kernel size for kappa. If sigma = 0, median of the data before
+%              the exponential operation will be used as sigma^2
 %
 % Output:
 %   params: (struct) ready to use for divSPD
@@ -44,6 +45,7 @@ function [params] = divSPDParams_I(kappa, sigma)
 if nargin < 2
     sigma = 2;
 end
+sigma2 = sigma^2;
 
 function [kk] = k(spikeTrains1, k1, spikeTrains2, k2)
     st1 = spikeTrains1.data{k1};
@@ -66,9 +68,20 @@ function [kk] = k(spikeTrains1, k1, spikeTrains2, k2)
     case {'identity'}
 	kk = sum(diff([z; spikeTrains1.duration]) .* zz);
     case {'exp_int'}
-	kk = exp(-sum(diff([z; spikeTrains1.duration]) .* zz)/sigma);
+	zzz = sum(diff([z; spikeTrains1.duration]) .* zz);
+	if sigma2 == 0
+	    median_sigma2 = median(zzz);
+	    kk = exp(-zzz/median_sigma2);
+	else
+	    kk = exp(-zzz/sigma2);
+	end
     case {'int_exp'}
-	zz = exp(-zz/sigma);
+	if sigma2 == 0
+	    median_sigma2 = median(zz);
+	    zz = exp(-zz/median_sigma2);
+	else
+	    zz = exp(-zz/sigma2);
+	end
 	kk = sum(diff([z; spikeTrains1.duration]) .* zz);
     otherwise
 	error('invalid kernel!');

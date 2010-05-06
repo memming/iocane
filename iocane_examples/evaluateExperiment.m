@@ -1,6 +1,6 @@
-function [p, power, dist, d12] = evaluateExperiment(spikeTrains1, spikeTrains2, M, alpha, verbose, divMeasures)
+function [p, power, dist, d12, rtime] = evaluateExperiment(spikeTrains1, spikeTrains2, M, alpha, verbose, divMeasures)
 % Compute the statistical power for each divergence method
-% [p, power] = evaluateExperiment(spikeTrains1, spikeTrains2, M, alpha, verbose, divMeasures)
+% [p, power, dist, d12, rtime] = evaluateExperiment(spikeTrains1, spikeTrains2, M, alpha, verbose, divMeasures)
 %
 % Perform hypothesis testing given lots of samples from the null hypothesis
 % (spikeTrains1) and alternative hypothesis (spikeTrains2) and return the
@@ -16,9 +16,12 @@ function [p, power, dist, d12] = evaluateExperiment(spikeTrains1, spikeTrains2, 
 % Output:
 %   p: p-value of samples from H1 on empirical distribution of H0
 %   power: estimated statistical power for each divergence method
+%   dist: value of the statistic under null hypothesis (spikeTrains1)
+%   d12: value of the statistic for cross condition (null vs alternate)
+%   rtime: running time for each divergence (uses tic/toc)
 %
 % $Id$
-% Copyright 2009 iocane project. All rights reserved.
+% Copyright 2010 iocane project. All rights reserved.
 
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted provided that the following conditions are met:
@@ -78,6 +81,7 @@ for k = 1:size(divMeasures, 1)
     divHandle = divMeasures{k,1};
     divParams = divMeasures{k,2};
     % create null hypothesis
+    tt4div = tic;
     dist{k} = empDivDist(spikeTrains1, divHandle, divParams, verbose);
 
     kk = 1;
@@ -90,7 +94,7 @@ for k = 1:size(divMeasures, 1)
 	    if verbose
 		tt = tt + toc(t);
 		waitMins = (tt / kk) * (nSurr-kk) / 60;
-		if waitMins > 1
+		if waitMins > 1 && mod(kk, 100) == 1
 		    fprintf('Estimated time remaining: %f mins [%d]\r', ...
 			waitMins, kk);
 		end
@@ -98,10 +102,21 @@ for k = 1:size(divMeasures, 1)
 	    kk = kk + 1;
 	end
     end
+    rtime(k) = toc(tt4div);
+end
+
+if any(isnan(d12(:)))
+    warning('There are NaN values in the divergence!');
+end
+
+if any(isinf(d12(:)))
+    warning('There are Inf values in the divergence!');
 end
 
 if verbose; fprintf('Statistical power with alpha = %f\n', alpha); end
-fid = fopen(['eval_' datestr(now,30) '.log'], 'w');
+logfilename = ['eval_' datestr(now,30) '.log'];
+fprintf('Logging results in file [%s]\n', logfilename);
+fid = fopen(logfilename, 'w');
 fprintf(fid, '%s\r\n', mfilename);
 fprintf(fid, '$Id$\r\n');
 fprintf(fid, '%s, %s, %d, %f\n', spikeTrains1.source, spikeTrains2.source, M, alpha);
@@ -110,9 +125,9 @@ for k = 1:length(dbs); fprintf(fid, '%s\r\n', dbs(k).file); end
 for k = 1:size(divMeasures, 1)
     power(k) = sum(p(k,:) < alpha) / size(p, 2);
     if verbose
-	fprintf('%f - \t %s %s\n', power(k), func2str(divMeasures{k,1}), dparams2str(divMeasures{k,2}));
+	fprintf('%f (%f sec) - \t %s %s\n', power(k), rtime(k), func2str(divMeasures{k,1}), dparams2str(divMeasures{k,2}));
     end
-    fprintf(fid, '%f - \t %s %s\r\n', power(k), func2str(divMeasures{k,1}), dparams2str(divMeasures{k,2}));
+    fprintf(fid, '%f (%f sec) - \t %s %s\r\n', power(k), rtime(k), func2str(divMeasures{k,1}), dparams2str(divMeasures{k,2}));
 end
 fclose(fid);
 

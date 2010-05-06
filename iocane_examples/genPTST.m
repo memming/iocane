@@ -1,8 +1,16 @@
-% Hypothesis test example experiment
-% - Precisely Timed Spike Train (PTST) vs Poisson approximation
+function spikeTrains = genPTST(N, M, param)
+% experiment- Precisely Timed Spike Train (PTST) vs equivalent Poisson process
+% spikeTrains = genPTST(N, M, param)
+%
+% Input
+%   N: trials per spikeTrains
+%   M: number of sets of trials
+%   param.T: length of the spike train
+%   param.L: number of PTST events
+%   param.type: 'PTST' or 'equPoisson' (equi-rate Poisson process)
 %
 % $Id$
-% Copyright 2009 iocane project. All rights reserved.
+% Copyright 2010 iocane project. All rights reserved.
 
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted provided that the following conditions are met:
@@ -30,32 +38,29 @@
 rand('seed', 20091026);
 randn('seed', 20091026);
 
-N = 40; % Number of realizations
-M = 46; % Number of point processes per class
-%M = 13; % Number of point processes per class
-
-L = 4; % Number of precisely timed action potentials (or bumps in Poisson case)
-T = 1; % total duration
+L = param.L; % Number of precisely timed action potentials (or bumps in Poisson case)
+T = param.T; % total duration
 
 % The mean position of APs
 mu = rand(L, 1) * T/2 + T/4;
 % The std of each AP
 sigma = rand(L, 1) * 0.010 + 0.001;
-% Probability of lossing each AP
-p = rand(L, 1);
+% Probability of NOT lossing each AP
+p = 1 - 0.5 * rand(L, 1);
 npcum = cumsum(p); % normalized cumulative for randomly choosing one for Poisson
 npcum = npcum / npcum(end);
 
-spikeTrains.N = N;
-spikeTrains.duration = T;
-spikeTrains.source = '$Id$';
-spikeTrains.data = cell(N, 1);
-spikeTrains.samplingRate = Inf;
+spikeTrainsTemplate.N = N;
+spikeTrainsTemplate.duration = T;
+spikeTrainsTemplate.source = '$Id$';
+spikeTrainsTemplate.data = cell(N, 1);
+spikeTrainsTemplate.subtype = param.type;
+spikeTrainsTemplate.samplingRate = Inf;
 
 for kM = 1:M
-    spikeTrains1(kM) = spikeTrains; % PTST
-    spikeTrains2(kM) = spikeTrains; % Poisson
-
+    spikeTrains(kM) = spikeTrainsTemplate; % PTST
+    switch(param.type)
+    case 'PTST'
     for k = 1:N
 	st = [];
 	for kk = 1:L
@@ -63,35 +68,21 @@ for kM = 1:M
 		st = [st; randn * sigma(kk) + mu(kk)];
 	    end
 	end
-	spikeTrains1(kM).data{k} = sort(st);
-
+	spikeTrains(kM).data{k} = sort(st);
+    end
+    case {'equPoisson', 'Poisson'}
+    for k = 1:N
 	st = [];
 	nPoiss = poissrnd(sum(p));
 	for kk = 1:nPoiss
 	    kkk = find(rand < npcum, 1, 'first');
 	    st = [st; randn * sigma(kkk) + mu(kkk)];
 	end
-	spikeTrains2(kM).data{k} = sort(st);
+	spikeTrains(kM).data{k} = sort(st);
+    end
+    otherwise
+	error('unknown type');
     end
 end
 
-divMeasures = {...
-    %@divRatioChiSquare, divSPDParams_I('int_exp', 0); ... % median kernel
-    @divRatioChiSquare, divSPDParams_I('exp_int', 0); ... % median kernel
-    %@divRatioChiSquare, divSPDParams_I('int_exp'); ... % default kernel
-    %@divRatioChiSquare, divSPDParams_I('exp_int'); ... % default kernel
-    %@divRatioChiSquare, divSPDParams_I('identity'); ...
-    %@divL2CuIF, []; ...
-    %@divSPD, []; ...
-    %@divSPD, divSPDParams_I('int_exp'); ...
-    %@divSPD, divSPDParams_I('exp_int'); ...
-    %@divCDF, divCDFParams(Inf, 'sum'); ...
-    %@divCDF, divCDFParams(2, 'sum'); ...
-    %@divCDF, divCDFParams(Inf, 'sup'); ...
-%    @divISF, []; ...
-};
-
-[p, power, dist, d12] = evaluateExperiment(spikeTrains1, spikeTrains2, M, 0.05, true, divMeasures);
-
-%[p, power, dist, d12] = evaluateExperiment(spikeTrains1, spikeTrains2, M);
 % vim:ts=8:sts=4:sw=4

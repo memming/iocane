@@ -76,12 +76,15 @@ for kM = 1:M
 end
 
 divMeasures = {...
-    @divSPD, []; ...
+    @divRatioChiSquare, divSPDParams_I('int_exp', 0); ... % median kernel
+    @divRatioChiSquare, divSPDParams_I('exp_int', 0); ... % median kernel
+    @divRatioChiSquare, divSPDParams_I('int_exp'); ... % default kernel
+    @divRatioChiSquare, divSPDParams_I('exp_int'); ... % default kernel
+    @divRatioChiSquare, divSPDParams_I('identity'); ...
     %@divISF, []; ...
     %@divCDF, divCDFParams(2, 'sum'); ...
 };
 
-%[p, power, dist, d12] = evaluateExperiment(spikeTrains1, spikeTrains2, M, 0.05, true, divMeasures);
+[p, power, dist, d12] = evaluateExperiment(spikeTrains1, spikeTrains2, M, 0.05, true, divMeasures);
 
-[p, power, dist, d12] = evaluateExperiment(spikeTrains1, spikeTrains2, M);
 % vim:ts=8:sts=4:sw=4
