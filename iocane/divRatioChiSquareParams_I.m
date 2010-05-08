@@ -18,9 +18,11 @@ function [params] = divRatioChiSquareParams_I(kernelString, sigma)
 %
 % See also: divRatioChiSquare
 
+isExpInt = false;
 switch(kernelString)
 case {'identity'}
     isIntFirst = true;
+    sigma = Inf;
 case {'exp_int'}
     isIntFirst = true;
     isExpInt = true;
@@ -79,7 +81,6 @@ function [Kxx, Kxy, Kyy] = k(spikeTrainsX, xIdx, spikeTrainsY, yIdx)
     if isMedianSigma
 	% We fix the kernel size from X and apply to Kxy and Kyy
 	sigma = median(Kxx(:));
-	disp(sigma)
     end
 
     if isExpInt % 'exp_int'
