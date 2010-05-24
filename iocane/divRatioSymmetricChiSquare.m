@@ -1,6 +1,6 @@
-function [div] = divRatioChiSquare(spikeTrains1, spikeTrains2, params)
-% Kernel estimation of the Radon-Nikodym derviative in Chi-square divergence
-% [div] = divRatioChiSquare(spikeTrains1, spikeTrains2, params)
+function [div] = divRatioSymmetricChiSquare(spikeTrains1, spikeTrains2, params)
+% Kernel estimation of R-N derviative in symmetric chi-square divergence
+% div = divRatioSymmetricChiSquare(spikeTrains1, spikeTrains2, params)
 % The Radon-Nikodym derivative is estimated using regularized kernel least
 % squares using the given kernel.
 %
@@ -10,10 +10,10 @@ function [div] = divRatioChiSquare(spikeTrains1, spikeTrains2, params)
 % Output:
 %   div: (1) divergence value
 %
-% g = argmin_f \int (dP/dQ - f)^2 dQ
-% div = \int (g - 1)^2 dQ
+% g = argmin_f \int (dP/d(P+Q) - f)^2 dQ
+% div = \int (g - 1)^2 d(P+Q)/2
 %
-% See also: 
+% See also: divRatioChiSquare, divRatioChiSquareParams_I
 %
 % Original idea by Sohan Seth
 % Caution: We haven't showed which SPD kernels are universal. Only universal
@@ -47,6 +47,7 @@ function [div] = divRatioChiSquare(spikeTrains1, spikeTrains2, params)
 
 lambdaXX = 1 / (spikeTrains1.N);
 lambdaYY = 1 / (spikeTrains2.N);
+lambdaZZ = 1 / (spikeTrains1.N + spikeTrains2.N);
 
 kernel = params.kernel;
 
@@ -57,12 +58,40 @@ end
 
 [Kxx, Kxy, Kyy] = kernel(spikeTrains1, 1:spikeTrains1.N, spikeTrains2, 1:spikeTrains2.N);
 
-alphaXX = (Kxx * Kxx + lambdaXX * eye(size(Kxx))) ...
-    \ (Kxy * ones(spikeTrains1.N, 1));
-divXX = mean((Kxx * alphaXX - 1).^2);
+% When P+Q is used as the basis
+%
+% Kzy = [Kxy; Kyy];
+% Kzx = [Kxx; Kxy'];
+% Kzz = [Kxx Kxy; Kxy' Kyy]; % = [Kzx Kzy];
+% 
+% alphaZY = (Kzz * Kzz + lambdaZZ * eye(size(Kzz))) ...
+%     \ (Kzy * ones(spikeTrains2.N, 1));
+% divZY = mean((Kzz * alphaZY - 1).^2);
+% 
+% alphaZX = (Kzz * Kzz + lambdaZZ * eye(size(Kzz))) ...
+%     \ (Kzx * ones(spikeTrains1.N, 1));
+% divZX = mean((Kzz * alphaZX - 1).^2);
+% 
+% div = (divZX + divZY) / 2;
 
-alphaYY = (Kyy * Kyy + lambdaYY * eye(size(Kyy))) ...
-    \ (Kxy' * ones(spikeTrains2.N, 1));
-divYY = mean((Kyy * alphaYY - 1).^2);
+% When P is used for the basis and dP/d(P+Q) is evaluated
+% ((Kxy * Kyx + Kxx * Kxx) / 2)^-1 * Kxx * 1
+% If median kernel size is used, it should be estimated for P
+alphaXY = (Kxy * Kxy' + Kxx * Kxx + lambdaXX * eye(size(Kxx)) / 2) ...
+    \ Kxx * ones(spikeTrains1.N, 1);
+divXY = mean((alphaXY' * Kxy - 1).^2);
 
-div = (divXX + divYY) / 2;
+% When Q is used for the basis and dQ/d(P+Q) is evaluated
+% ((Kyx * Kxy + Kyy * Kyy) / 2)^-1 * Kyy * 1
+% If median kernel size is used, it should be estimated for Q
+if strcmp(params.sigma, 'median')
+    [Kxx, Kxy, Kyy] = kernel(spikeTrains2, 1:spikeTrains2.N, spikeTrains1, 1:spikeTrains1.N); % Now X is Y and Y is X. That's confusing! :P
+end
+alphaYX = (Kxy * Kxy' + Kxx * Kxx + lambdaYY * eye(size(Kxx)) / 2) ...
+    \ Kxx * ones(spikeTrains1.N, 1);
+divYX = mean((alphaYX' * Kxy - 1).^2);
+% alphaYX = ((Kxy' * Kxy + Kyy * Kyy + lambdaYX * eye(size(Kyy)) / 2) ...
+%     \ Kyy * ones(spikeTrains2.N, 1);
+% divYX = mean((Kxy' * alphaYX - 1).^2);
+
+div = (divXY + divYX) / 2;

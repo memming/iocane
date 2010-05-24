@@ -64,4 +64,8 @@ for k = 1:fppm2.spikeTrains.N
 end
 
 d = mean([dTemp1;dTemp2]);
+
+if isinf(d)
+    warning('here we are');
+end
 % vim:ts=8:sts=4:sw=4
