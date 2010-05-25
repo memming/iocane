@@ -66,6 +66,12 @@ end
 d = mean([dTemp1;dTemp2]);
 
 if isinf(d)
-    warning('here we are');
+    %warning('here we are');
+    d = 0;
 end
+
+if isnan(d)
+    keyboard;
+end
+
 % vim:ts=8:sts=4:sw=4

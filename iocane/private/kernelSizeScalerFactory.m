@@ -3,7 +3,7 @@ function [kernelSizeHandle] = kernelSizeScaleFactory(kernelSizeName)
 % kernelSizeHandle = kernelSizeScaleFactory(kernelSizeName)
 % Input:
 %   kernelSizeName: (string) Name of the handle
-%          Valid values: default, silverman
+%          Valid values: default, silverman, modsilverman
 % Output:
 %   kernelSizeHandle: (@) function handle (dim, N, sigma1) -> (sigma)
 %
@@ -89,6 +89,10 @@ function [sigma] = modifiedSilvermanKernelSizeScaler(dimension, n, sigma1)
 % [sigma] = modifiedSilvermanKernelSizeScaler(dimension, n)
 % Uses Silverman's rule and factorial vol N^(-1/(dimension+4)) / dimension!
 % Computes the kernel size for target dimension given the number of samples
+%
+% CAUTION: Do NOT use this one if dimension goes higher than 7.
+%          sigma will be so small and likelihood will be Inf.
+%
 % Input:
 %   dimension: (natural number) Demension of the data
 %   n: (natural number) Total number of samples

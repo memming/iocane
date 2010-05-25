@@ -48,7 +48,7 @@ params.mode = mode;
 switch(lower(mode))
 case {'hist'}
     %params.kernelSizeHandle = @(x)(kernelSize);
-    params.estimateMarginalIntensity = @(tr,spks)(histc(flattenCell(spks.data),tr));
+    params.estimateMarginalIntensity = @(tr,spks)(histc(flattenCell(spks.data),tr)/spks.N);
 case {'optimal', 'sskernel'}
     % requires sskernel from Shimazaki
     requireThirdParty('sskernel');
