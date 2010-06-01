@@ -1,4 +1,4 @@
-function [spikeTrains1, spikeTrains2, p, power, dist, d12, rtime, divMeasures] = simpleExperiments(expNum, isPlotOn, divMeasures, Noveride)
+function [spikeTrains1, spikeTrains2, p, power, dist, d12, rtime, divMeasures] = simpleExperiments(expNum, isPlotOn, divMeasures, Noveride, M)
 % Run a set of simple experiments with fixed parameters
 % [spikeTrains1, spikeTrains2, p, power, dist, d12, rtime, divMeasures] = simpleExperiments(expNum, isPlotOn, divMeasures, Noveride);
 %
@@ -79,8 +79,9 @@ if nargin < 4
     Noveride = 0;
 end
 
-%% Global setting
-M = 46;
+if nargin < 5
+    M = 46;
+end
 
 switch(expNum)
 case 1
@@ -159,7 +160,8 @@ N = 25;
 if Noveride ~= 0; N = Noveride; end
 renewalParam1.T = 1;
 renewalParam1.rate = 10;
-renewalParam1.shape = 2;
+%renewalParam1.shape = 2;
+renewalParam1.shape = 10;
 spikeTrains1 = genRenewalGamma(N, M, renewalParam1);
 homogeneousParam1.tOffset = 0;
 homogeneousParam1.duration = 1;

@@ -74,6 +74,8 @@ divMeasures = {...
     };
 end
 
+power = []; p = []; dist = []; d12 = []; rtime = []; % initialize
+
 nSurr = M * (M - 1) / 2;
 d12 = zeros(size(divMeasures, 1), nSurr);
 p = zeros(size(divMeasures, 1), nSurr);
@@ -121,7 +123,7 @@ fprintf(fid, '%s\r\n', mfilename);
 fprintf(fid, '$Id$\r\n');
 fprintf(fid, '%s, %s, %d, %f\n', spikeTrains1.source, spikeTrains2.source, M, alpha);
 dbs = dbstack;
-for k = 1:length(dbs); fprintf(fid, '%s\r\n', dbs(k).file); end
+for k = 1:length(dbs); fprintf(fid, '%s (%d)\r\n', dbs(k).file,dbs(k).line); end
 for k = 1:size(divMeasures, 1)
     power(k) = sum(p(k,:) < alpha) / size(p, 2);
     if verbose

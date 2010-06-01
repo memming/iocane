@@ -1,6 +1,6 @@
 function [params] = divRatioChiSquareParams_I(kernelString, sigma)
 % Kernels using L2 distance between realizations of counting processes
-% [params] = divSPDParams_I(kernelString, sigma)
+% [params] = divRatioChiSquareParams_I(kernelString, sigma)
 % The kernels are symmetric.
 %
 % Input:

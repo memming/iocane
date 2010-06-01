@@ -1,18 +1,19 @@
-function spikeTrains = genRenewalGamma(N, M, param)
-% Generate renewal process with interval distribution that follows Gamma dist.
-% spikeTrains = genRenewalGamma(N, M, param)
+function [div] = divSPD_KM(spikeTrains1, spikeTrains2, params)
+% Divergence using strictly positive definite kernels
+% [div] = divSPD_KM(spikeTrains1, spikeTrains2, params)
 %
-% Input
-%   N: trials per spikeTrains
-%   M: number of sets of trials
-%   param.rate: mean rate
-%   param.shape: shape parameter
-%   param.T: length of simulation
+% Input:
+%   spikeTrains1, spikeTrains2: (struct) sets of spike trains for comparison
+%   params: (struct) see divSPDParams that ends with _KM
+% Output:
+%   div: (1) divergence value
 %
-% samples from gamma distribution: gamrnd(shape_param,scale_param)
-% mean = shape_param * scale_param
-% var = shape_param * scale_param^2
-% The mean firing rate is 1/mean of interval distribution, rate = 1/mean
+% div = \iint K(x,y) d\mu(y) d\mu(y)
+% where \mu = (P-Q)
+%
+% See also: divSPDParams, divSPDParams_fgh, divCount, divL2Poisson
+%
+% Original idea by Memming and Sohan Seth
 %
 % $Id$
 % Copyright 2010 iocane project. All rights reserved.
@@ -40,35 +41,12 @@ function spikeTrains = genRenewalGamma(N, M, param)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-spikeTrainsTemplate.duration = param.T;
-spikeTrainsTemplate.source = '$Id$';
-spikeTrainsTemplate.samplingRate = Inf;
-spikeTrainsTemplate.N = N;
-spikeTrainsTemplate.data = cell(N, 1);
+kernel = params.kernel;
+% NOTE: Not all kernels are symmetric.
 
-a = param.shape;
-b = 1 / param.rate / a;
-meanI = a*b;
-stdI = sqrt(a)*b;
-nSpikes_mean = (param.T / b);
-l95q_interval = gaminv(0.05, a, b); % lower quantile
-Nmax = ceil(param.T / l95q_interval);
-transientT = 5 * nSpikes_mean; % to make it stationary, simulate a bit more
-TT = param.T + transientT;
-
-for kM = 1:M
-    spikeTrains(kM) = spikeTrainsTemplate;
-    for k = 1:N
-	intervals = gamrnd(a, b, Nmax, 1);
-	st = cumsum(intervals);
-       	tLen = st(end);
-	while tLen < TT % If it was not enough, we generate some more
-	    Nmax = Nmax * 2;
-	    intervals = gamrnd(a, b, Nmax, 1);
-	    st = cumsum(intervals);
-	    tLen = st(end);
-	end
-	st = st(st >= transientT & st < TT) - transientT;
-	spikeTrains(kM).data{k} = st;
-    end
+if spikeTrains1.N == 0 || spikeTrains2.N == 0
+    div = 0;
+else
+    [Kxx, Kxy, Kyy] = kernel(spikeTrains1, 1:spikeTrains1.N, spikeTrains2, 1:spikeTrains2.N);
+    div = sum(Kxx(:))/spikeTrains1.N^2 + sum(Kyy(:))/spikeTrains2.N^2 - 2 * sum(Kxy(:))/spikeTrains1.N/spikeTrains2.N;
 end
