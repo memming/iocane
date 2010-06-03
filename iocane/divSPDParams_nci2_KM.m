@@ -47,18 +47,20 @@ function [params] = divSPDParams_nci2_KM(pwidth, ksize, kern_str)
 % POSSIBILITY OF SUCH DAMAGE.
 
 if (exist('kern_str') ~= 1)
-	kern_str = 'gaussian';
+    kern_str = 'gaussian';
 end
 
 switch lower(kern_str)
-case 'gaussian'
-	K = @(z) exp(-(z.^2) ./ (2*(ksize^2)));
-case 'laplacian'
-	K = @(z) exp(-abs(z) ./ ksize);
-case 'triangular'
-	K = @(z) ((abs(z) < ksize) .* (1 - abs(z)/ksize));
-case 'rectwin'
-	K = @(z) (abs(z) <= ksize);
+    case 'gaussian'
+        K = @(z) exp(-(z.^2) ./ (2*(ksize^2)));
+    case 'laplacian'
+        K = @(z) exp(-abs(z) ./ ksize);
+    case 'triangular'
+        K = @(z) ((abs(z) < ksize) .* (1 - abs(z)/ksize));
+    case 'rectwin'
+        K = @(z) (abs(z) <= ksize);
+    case 'cauchy'
+        K = @(z) (1 ./ (1 + z.^2));
 otherwise
 	error('Unknown kernel! Try one: ''laplacian'', ''gaussian'', ''triangular'' and ''rectwin''');
 end
@@ -70,7 +72,7 @@ function [Kxx, Kxy, Kyy] = k(spikeTrainsX, xIdx, spikeTrainsY, yIdx)
 
     function [V] = subKernel(st1, st2, T)
 	L1 = length(st1); L2 = length(st2);
-	V = 0;
+	V = K(0)*T;
 	if L1 == 0 || L2 == 0
 	    return;
 	end
