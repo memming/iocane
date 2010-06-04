@@ -60,7 +60,7 @@ switch lower(kern_str)
     case 'rectwin'
         K = @(z) (abs(z) <= ksize);
     case 'cauchy'
-        K = @(z) (1 ./ (1 + z.^2));
+        K = @(z) (1 ./ (1 + (z.^2) / ksize^2));
 otherwise
 	error('Unknown kernel! Try one: ''laplacian'', ''gaussian'', ''triangular'' and ''rectwin''');
 end
@@ -72,8 +72,8 @@ function [Kxx, Kxy, Kyy] = k(spikeTrainsX, xIdx, spikeTrainsY, yIdx)
 
     function [V] = subKernel(st1, st2, T)
 	L1 = length(st1); L2 = length(st2);
-	V = K(0)*T;
-	if L1 == 0 || L2 == 0
+	if L1 == 0 && L2 == 0
+        V = K(0)*T;
 	    return;
 	end
 	st1 = st1(:)'; st2 = st2(:)';
