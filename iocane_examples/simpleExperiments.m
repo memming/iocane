@@ -189,7 +189,22 @@ if isPlotOn
 end
 
 alpha = 0.05;
-[p, power, dist, d12, rtime] = evaluateExperiment(spikeTrains1, spikeTrains2, M, alpha, true, divMeasures);
+if ~isempty(divMeasures)
+    [p, power, dist, d12, rtime] = ...
+    evaluateExperiment(spikeTrains1, spikeTrains2, M, alpha, true, divMeasures);
+else % if divMeasures is empty, we do Wilcoxon rank sum test
+    divMeasures = {'Wilcoxon', []};
+    tic;
+    for kM = 1:M
+	n1 = cellfun('length', spikeTrains1(kM).data);
+	n2 = cellfun('length', spikeTrains2(kM).data);
+	[p, h(kM)] = ranksum(n1, n2, 'alpha', alpha);
+    end
+    power = mean(h);
+    rtime = toc;
+    dist = []; d12 = [];
+    fprintf('%f (%f sec) - \t Wilcoxon rank sum test \n', power, rtime);
+end
 
 if isPlotOn
     cm = colormap('lines');

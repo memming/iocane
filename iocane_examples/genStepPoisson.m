@@ -40,9 +40,6 @@ function spikeTrains = genStepPoisson(N, M, param)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-rand('seed', 20100128);
-randn('seed', 20100128);
-
 sectionLength = param.sectionLength;
 T = 2 * sectionLength;
 lambda1 = param.lambda1;

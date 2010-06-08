@@ -14,6 +14,7 @@ power = zeros(nMC, length(NList), size(divMeasures,1));
 rtime = zeros(nMC, length(NList), size(divMeasures,1));
 
 for kMC = 1:nMC
+    fprintf('\n>>>>>>>> Monte Carlo [%d/%d] <<<<<<<<\n', kMC, nMC);
     for NIdx = 1:length(NList)
 	N = NList(NIdx);
 	[s1, s2, p, power_simple, d, d12, rtime_simple] = ...
@@ -30,7 +31,7 @@ save(['simpleScan_' num2str(expNum) '_' datestr(now,30) '.mat'], 'power', 'NList
 
 % Plot results
 color = {'b', 'k', 'r', 'g', 'c', 'y'};
-marker = {'-', ':', 'o-', 'x:', '--', 'd:', '+-', '.-'};
+marker = {'-', ':', 'o-', 'x:', '--', 'd:', '+-', '.-', 's--'};
 figure; hold all;
 kkk = 1;
 for k = 1:size(divMeasures, 1)

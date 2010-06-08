@@ -35,9 +35,6 @@ function spikeTrains = genPTST(N, M, param)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-rand('seed', 20091026);
-randn('seed', 20091026);
-
 L = param.L; % Number of precisely timed action potentials (or bumps in Poisson case)
 T = param.T; % total duration
 
