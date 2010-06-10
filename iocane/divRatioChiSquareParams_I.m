@@ -80,7 +80,18 @@ function [Kxx, Kxy, Kyy] = k(spikeTrainsX, xIdx, spikeTrainsY, yIdx)
 
     if isMedianSigma
 	% We fix the kernel size from X and apply to Kxy and Kyy
-	sigma = median(Kxx(:));
+	nzidx = (Kxx(:) ~= 0);
+	if ~any(nzidx)
+	    % completely empty spike trains only?! what do you want me to do?
+	    Kxx = ones(size(Kxx));
+	    Kxy = ones(size(Kxy));
+	    Kyy = ones(size(Kyy));
+	    return;
+	end
+	nzKxx = Kxx(nzidx);
+	sigma = median(nzKxx(:));
+	% MEMMING: for debugging/monitoring purpose
+	fprintf('current median kernel size: [%f]\n', sigma); 
     end
 
     if isExpInt % 'exp_int'

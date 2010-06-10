@@ -1,23 +1,18 @@
-function [params] = divSPDParams_nci2_KM(pwidth, ksize, kern_str)
-% params = divSPDParams_nci2_KM(pwidth, ksize, kern_str)
+function [params] = divSPDParams_nci_KM(tau, sigma)
+% params = divSPDParams_nci_KM(tau, sigma)
 % 
-% Returns the nonlinear Cross-Intensity kernel (definition 2 in Paiva 2009).
-% \int K(\lambda1(t) - \lambda2(t)) dt
-% where lambda is the smoothed spike train with a rectangular function
+% Returns the nonlinear Cross-Intensity kernel (definition 1 in Paiva 2009).
+% exp( \int (\lambda1(t) - \lambda2(t))^2 dt )
+% where lambda is the smoothed spike train.
+% The L2 distance of the smoothed spike trains can be computed using mCI kernel
 %
 % Input:
-%  PWIDTH: Duration of the rectangular pulse smoothing function for
-%          intensity estimation (sec).
-%   KSIZE: Bandwidth parameter of nonlinear kernel (spk/s).
-%  KERNEL: [optional] String describing which kernel to use in the
-%          evaluation of the inner product. Default: 'gaussian'.
-%          Other known values are: 'laplacian', 'triangular', and 'rectwin'.
+%   tau: time constant for the low pass filtering to smooth spike trains
+%   sigma: kernel size for the (outter) Gaussian
 %
 % Output:
 %   params: (struct) ready to use for divSPD
 %
-% Based on code by Antonio Paiva. (Feb 2008)
-% 
 % See also: divSPD
 %
 % $Id$
@@ -46,57 +41,29 @@ function [params] = divSPDParams_nci2_KM(pwidth, ksize, kern_str)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.
 
-if (exist('kern_str') ~= 1)
-    kern_str = 'gaussian';
-end
-
-switch lower(kern_str)
-    case 'gaussian'
-        K = @(z) exp(-(z.^2) ./ (2*(ksize^2)));
-    case 'laplacian'
-        K = @(z) exp(-abs(z) ./ ksize);
-    case 'triangular'
-        K = @(z) ((abs(z) < ksize) .* (1 - abs(z)/ksize));
-    case 'rectwin'
-        K = @(z) (abs(z) <= ksize);
-    case 'cauchy'
-        K = @(z) (1 ./ (1 + (z.^2) / ksize^2));
-otherwise
-	error('Unknown kernel! Try one: ''laplacian'', ''gaussian'', ''triangular'' and ''rectwin''');
-end
-
 function [Kxx, Kxy, Kyy] = k(spikeTrainsX, xIdx, spikeTrainsY, yIdx)
     Nx = length(xIdx); Ny = length(yIdx);
     Kxx = zeros(Nx, Nx); Kxy = zeros(Nx, Ny); Kyy = zeros(Ny, Ny);
-    T = max(spikeTrainsX.duration, spikeTrainsY.duration);
 
-    function [V] = subKernel(st1, st2, T)
+    function [V] = subKernel(st1, st2) % THIS IS mCI (a.k.a. CIP)
 	L1 = length(st1); L2 = length(st2);
-	if L1 == 0 && L2 == 0
-	    V = K(0)*T;
+	V = 0;
+	if L1 == 0 || L2 == 0
 	    return;
-	end
-	st1 = st1(:)'; st2 = st2(:)';
+    end
 
-	% times: when the difference between intensity functions changes
-	[times idx] = sort([0, st1-pwidth/2, st1+pwidth/2, ...
-						st2-pwidth/2, st2+pwidth/2]);
-	% if the difference should increase or decrease
-	incr = [0, ones(1,L1), -ones(1,L1), -ones(1,L2), ones(1,L2)];
-	incr = incr(idx);
-	val = cumsum(incr) / pwidth;
-	times(times < 0) = 0;
-	times(times > T) = T;
-	dtimes = diff([times T]);
-	nzidx = (dtimes ~= 0);
-	V = sum(dtimes(nzidx) .* K(val(nzidx)));
+	for kk1 = 1:L1
+	    for kk2 = 1:L2
+		V = V + exp(-abs(st1(kk1) - st2(kk2))/tau);
+	    end
+    end
     end
 
     for k1 = 1:Nx
 	st1 = spikeTrainsX.data{xIdx(k1)};
 	for k2 = 1:Nx
 	    st2 = spikeTrainsX.data{xIdx(k2)};
-	    Kxx(k1, k2) = subKernel(st1, st2, T);
+	    Kxx(k1, k2) = subKernel(st1, st2);
 	end
     end
 
@@ -104,7 +71,7 @@ function [Kxx, Kxy, Kyy] = k(spikeTrainsX, xIdx, spikeTrainsY, yIdx)
 	st1 = spikeTrainsX.data{xIdx(k1)};
 	for k2 = 1:Ny
 	    st2 = spikeTrainsY.data{yIdx(k2)};
-	    Kxy(k1, k2) = subKernel(st1, st2, T);
+	    Kxy(k1, k2) = subKernel(st1, st2);
 	end
     end
 
@@ -112,11 +79,28 @@ function [Kxx, Kxy, Kyy] = k(spikeTrainsX, xIdx, spikeTrainsY, yIdx)
 	st1 = spikeTrainsY.data{yIdx(k1)};
 	for k2 = 1:Ny
 	    st2 = spikeTrainsY.data{yIdx(k2)};
-	    Kyy(k1, k2) = subKernel(st1, st2, T);
+	    Kyy(k1, k2) = subKernel(st1, st2);
 	end
     end
+
+    K = [Kxx, Kxy; Kxy', Kyy];
+
+    % make the pairwise distance matrix from mCI kernel matrix K
+    g = diag(K);
+    N = Nx + Ny;
+    D2 = g(:) * ones(1, N) + ones(N, 1) * g(:)' - 2 * K;
+
+    % transform the distance matrix via Gaussian kernel
+    K = exp(-D2/2/sigma^2);
+
+    % decompose back
+    Kxx = K(1:Nx, 1:Nx);
+    Kyy = K(Nx+1:end, Nx+1:end);
+    Kxy = K(Nx+1:end, 1:Nx);
 end
 
+params.sigma = sigma;
+params.tau = tau;
 params.kernel = @k;
 
 end
