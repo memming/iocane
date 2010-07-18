@@ -110,7 +110,9 @@ PTSTParams.T = 1;
 PTSTParams.type = 'PTST';
 PoissonPTSTParams = PTSTParams;
 PoissonPTSTParams.type = 'equPoisson';
+s1 = rand('seed'); s2 = randn('seed');
 spikeTrains1 = genPTST(N, M, PTSTParams);
+rand('seed', s1); randn('seed', s2);
 spikeTrains2 = genPTST(N, M, PoissonPTSTParams);
 case 4
 fprintf('=== Experiment 4: Renewal vs Serially correlated\n');

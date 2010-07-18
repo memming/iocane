@@ -91,7 +91,7 @@ function [Kxx, Kxy, Kyy] = k(spikeTrainsX, xIdx, spikeTrainsY, yIdx)
 	nzKxx = Kxx(nzidx);
 	sigma = median(nzKxx(:));
 	% MEMMING: for debugging/monitoring purpose
-	fprintf('current median kernel size: [%f]\n', sigma); 
+	% fprintf('current median kernel size: [%f]\n', sigma); 
     end
 
     if isExpInt % 'exp_int'
