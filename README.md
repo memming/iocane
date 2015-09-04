@@ -12,3 +12,5 @@ Mainly designed for spike trains observed from neural systems. The objective is 
 * Poster presentation at SfN 2009 [blog post](http://memming.wordpress.com/2009/10/15/significance-test-for-spike-trains-based-on-finite-point-process-estimation/)  
 
 **BSD license is chosen for wide usage.**
+
+Copyright (c) [Memming](http://www.memming.com)
