@@ -1,4 +1,5 @@
 # Iocane
+![](./images/iocane_balance_logo_small.png)  
 Iocane is a deadly tool for analyzing temporal point processes.
 
 Mainly designed for spike trains observed from neural systems. The objective is to provide various methods for hypothesis testing. This allows the following applications:  
